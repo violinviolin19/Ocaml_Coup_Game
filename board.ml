@@ -1,19 +1,18 @@
-type deck = Deck of Deck.t | Not_deck
-type card_status = string*string
+
 exception InvalidPlayer of string
 exception InvalidCard of string
 
 type player = {
   id: string;
-  card_one: string;
-  card_two: string;   
+  card_one: Deck.card;
+  card_two: Deck.card;   
   money: int;
   ai: bool;
   alive: bool;
 }
 
 type t = {
-  current_deck : deck;
+  current_deck : Deck.t;
   current_players : player list;
   turn_order : (int*player) list;
   turn: int;
@@ -31,30 +30,34 @@ let current_player bd=
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
 let turn_info player bd=
-  let card_names="Your cards are: "^player.card_one^" and "^player.card_two in
-  let card_info= "" in
+  let card_names="Your cards are: "^Deck.get_name (player.card_one)^" and "^Deck.get_name (player.card_two) in
+  let card1_info= "You have a "^Deck.get_name player.card_one^" "^Deck.get_status player.card_one in
+  let card2_info= " and a"^Deck.get_name player.card_two^" "^Deck.get_status player.card_two in
   let money_info= " . You have "^ string_of_int player.money ^ "coins. " in
   let status= "You are "^ (if(player.alive) then "" else "not ")^"alive" in
-  card_names^card_info^money_info^status
+  card_names^card1_info^card2_info^money_info^status
 
 (** [is_ai player] is true if [player] is an ai.*)
 let is_ai player= player.ai
 
-let deal_pair deck=
+let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
   (*call a function that deals a card twice, and return a tuple with a card tuple
     and a deck *)
-  failwith "unimplemented"
+  match Deck.draw2 deck with 
+  |([c1;c2],d)->((c1,c2),d)
+  |_->failwith "impossible"
+
 
 let generate_player deck id is_ai=
   let pair = deal_pair deck in
   ({
     id= id;
-    card_one= fst (snd pair);
-    card_two= snd (snd pair);
+    card_one= fst (fst pair);
+    card_two= snd (fst pair);
     money= 2;
     ai= is_ai;
     alive= true;
-  },fst pair)
+  },snd pair)
 
 let generate_player_lst deck num_players =
   let rec last_deck = function
@@ -132,30 +135,32 @@ let steal stealer_id stolen_id bd=
   let stealer_given = change_money stealer_id bd 2 in
   change_money stolen_id stealer_given (-2)
 
-let find_player_card player_id card bd =
+let find_player_card player_id card_id bd =
   let player= find_player player_id bd in
-  if(player.card_one=card) then 1 else
-  if(player.card_two=card) then 2 else 
-    raise(InvalidCard card)
+  if(Deck.get_name player.card_one=card_id) then 1 else
+  if(Deck.get_name player.card_two=card_id) then 2 else 
+    raise(InvalidCard (card_id))
 
 let turnover_card killed_id bd card=
   let killed= find_player killed_id bd in 
   let killed= 
-    if(find_player_card killed_id card bd = 1) then {killed with card_one=""} else
-    if(find_player_card killed_id card bd = 2) then {killed with card_two= ""} else killed in
+    if(find_player_card killed_id card bd = 1) then {killed with card_one=Deck.set_status killed.card_one Deck.FaceDown} else
+    if(find_player_card killed_id card bd = 2) then {killed with card_two=Deck.set_status killed.card_two Deck.FaceDown} else killed in
   replace_player killed_id killed bd
 
-let assassinate killer_id killed_id bd card=
+(*NOTE: This and coup I had intended to be called after the person losing a card
+  chooses what card to turn over *)
+let assassinate killer_id killed_id bd card_id=
   let killer_paid = change_money killer_id bd (-3) in
-  turnover_card killed_id killer_paid card
+  turnover_card killed_id killer_paid card_id
 
-let coup couper_id couped_id bd card=
+let coup couper_id couped_id bd card_id=
   let couper_paid = change_money couper_id bd (-7) in
-  turnover_card couped_id couper_paid card
+  turnover_card couped_id couper_paid card_id
 
 let view_four exchanger_id bd=
   let pair= deal_pair bd.current_deck in
-  fst (snd pair) :: snd (snd pair) :: get_cards exchanger_id bd
+  fst (fst pair) :: snd (fst pair) :: get_cards exchanger_id bd
 
 let exchange exchanger_id bd card1 card2=
   let exchanger= find_player exchanger_id bd in

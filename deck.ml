@@ -14,13 +14,13 @@ let shuffle deck =
 let draw deck = 
   match deck with 
   | [] -> failwith "This won't happen"
-  | h :: t -> h 
+  | h :: t -> (h,t) 
 
 (** [draw deck] gives the first two cards of the deck. This is to be used 
     when invoking the Ambassador's swap command. *)
-let draw2 deck = 
+let draw2 deck =
   match deck with 
-  | h :: h2 :: t -> [h;h2]
+  | h :: h2 :: t -> ([h;h2],t)
   | _ -> failwith "This won't happen"
 
 (** [to_list_helper deck lst] gives a list of all the cards in the deck
@@ -48,3 +48,6 @@ let get_status card =
   | Deck -> "in the deck"
   | FaceUp -> "in play"
   | FaceDown -> "out of play"
+
+let set_status card status=
+  (fst card, status)
