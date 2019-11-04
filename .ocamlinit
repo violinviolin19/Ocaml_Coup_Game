@@ -1,0 +1,5 @@
+#directory "_build";;
+#require "str";;
+#load_rec "board.ml";;
+#load_rec "deck.ml";;
+#load_rec "main.ml";;
