@@ -1,4 +1,4 @@
-type deck = Deck of string | Not_deck
+type deck = Deck of Deck.t | Not_deck
 type card_status = string*string
 exception InvalidPlayer of string
 exception InvalidCard of string
@@ -17,7 +17,10 @@ type t = {
   current_players : player list;
   turn_order : (int*player) list;
   turn: int;
+  money_pool: int;
 }
+
+type result = Legal of t | Illegal
 
 let next_turn bd=
   {bd with turn= bd.turn+1}
@@ -29,7 +32,7 @@ let current_player bd=
     about themselves during a turn in [bd]. *)
 let turn_info player bd=
   let card_names="Your cards are: "^player.card_one^" and "^player.card_two in
-  let card_info= ""(* Info for which cards are flipped up*) in
+  let card_info= "" in
   let money_info= " . You have "^ string_of_int player.money ^ "coins. " in
   let status= "You are "^ (if(player.alive) then "" else "not ")^"alive" in
   card_names^card_info^money_info^status
@@ -77,7 +80,8 @@ let init_board deck num_players =
     current_deck= snd info;
     current_players= fst info;
     turn_order= assign_turns 1 (fst info);
-    turn= 0
+    turn= 0;
+    money_pool = 30
   }
 
 (**[find_player player bd] is the player in [bd] identified by [player]. *)
@@ -156,4 +160,14 @@ let view_four exchanger_id bd=
 let exchange exchanger_id bd card1 card2=
   let exchanger= find_player exchanger_id bd in
   {exchanger with card_one=card1; card_two=card2}
+
+let income player_name bd = 
+  if bd.money_pool == 0 then bd else change_money player_name bd 1 
+
+let foreign_aid player_name bd = 
+  if bd.money_pool < 2 then bd else change_money player_name bd 2
+
+let tax player_name bd = 
+  if bd.money_pool < 3 then bd else change_money player_name bd 3
+
 
