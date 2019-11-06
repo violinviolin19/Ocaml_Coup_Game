@@ -43,5 +43,7 @@ val tax : string->t->result
 
 val extract_legal : result -> t
 
+val get_money : string->t->int
+
 
 
