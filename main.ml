@@ -24,7 +24,8 @@ let rec play_game b =
       print_endline (current_player_id b ^ " takes income.");
       print_string "\n> ";
       play_game (next_turn legal_item) 
-      (*this step and similar steps below may be moved to process turn*)
+      (*this step and similar steps below may be moved to process turn
+      when more complex actions like assassinate are made*)
     else
       print_endline "That's not a valid command to take income try again\n";
       print_string "\n> ";
