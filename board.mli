@@ -29,7 +29,7 @@ val check_bank : string->int->t->bool
 
 val get_cards : string -> t -> Deck.card list
 
-val steal : string-> string-> t-> t
+val steal : string-> string-> t-> result
 
 val assassinate : string->string->t->string->result
 

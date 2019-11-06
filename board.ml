@@ -155,8 +155,11 @@ let change_money player_name bd cash=
   replace_player player_name new_player bd
 
 let steal stealer_id stolen_id bd=
-  let stealer_given = change_money stealer_id bd 2 in
-  change_money stolen_id stealer_given (-2)
+  try
+    let stealer_given = change_money stealer_id bd 2 in
+    Legal (change_money stolen_id stealer_given (-2))
+  with
+    _->Illegal
 
 let find_player_card player_id card_id bd =
   let player= find_player player_id bd in

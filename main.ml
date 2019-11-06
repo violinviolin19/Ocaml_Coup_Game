@@ -27,7 +27,6 @@ let rec play_game b =
     | Income -> let new_b = income (current_player_id b) b in 
       if new_b != Illegal then 
         let legal_item = extract_legal new_b in
-        (* print_int(get_money (current_player_id b) legal_item); *)
         print_endline (current_player_id b ^ " takes income.");
         print_string "\n> ";
         play_game (next_turn legal_item) 
@@ -48,6 +47,22 @@ let rec play_game b =
          print_string "\n> ";
          play_game b)
 
+    |Steal killed_id -> let killed_id = List.hd killed_id in
+      if(check_id killed_id b) then
+        let new_b= steal (current_player_id b) killed_id b in
+        if(new_b!= Illegal) then
+          let legal_item = extract_legal new_b in
+          print_endline (current_player_id b ^ " steals from "^killed_id);
+          print_string "\n ";
+          (play_game(next_turn legal_item))
+        else
+          (print_endline "That's not a valid command to steal try again \n";
+           print_string "\n> ";
+           play_game b)
+      else
+        (print_endline "That isn't a player";
+         print_string "\n> ";
+         play_game b)
     | Tax -> let new_b = tax (current_player_id b) b in
       if new_b != Illegal then 
         let legal_item = extract_legal (new_b) in
@@ -73,7 +88,6 @@ let rec play_game b =
         (print_endline "That isn't a player";
          print_string "\n> ";
          play_game b)
-
     | _ -> ()
 
   with
