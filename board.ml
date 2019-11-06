@@ -33,12 +33,15 @@ let current_player_id bd=
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
 let turn_info player bd=
-  let card_names="Your cards are: "^Deck.get_name (player.card_one)^" and "^Deck.get_name (player.card_two) in
-  let card1_info= "You have a "^Deck.get_name player.card_one^" "^Deck.get_status player.card_one in
-  let card2_info= " and a"^Deck.get_name player.card_two^" "^Deck.get_status player.card_two in
-  let money_info= " . You have "^ string_of_int player.money ^ "coins. " in
-  let status= "You are "^ (if(player.alive) then "" else "not ")^"alive" in
-  card_names^card1_info^card2_info^money_info^status
+  let card_names="Your cards are: "^Deck.get_name (player.card_one)^" and "^
+                 Deck.get_name (player.card_two) in
+  let card1_info= ". You have a "^Deck.get_name player.card_one^" "
+                  ^Deck.get_status player.card_one in
+  let card2_info= " and a "^Deck.get_name player.card_two^" "
+                  ^Deck.get_status player.card_two in
+  let money_info= ". You have "^ string_of_int player.money ^ " coins. " in
+  let status= "You are "^ (if(player.alive) then "" else "not ")^"alive." in
+  card_names^card1_info^card2_info^money_info^status^"\n"
 
 (** [is_ai player] is true if [player] is an ai.*)
 let is_ai player= player.ai
@@ -85,7 +88,7 @@ let init_board deck num_players =
   {
     current_deck= snd info;
     current_players= fst info;
-    turn_order= assign_turns 1 (fst info);
+    turn_order= assign_turns 0 (fst info);
     turn= 0;
     money_pool = 30
   }
@@ -147,9 +150,11 @@ let find_player_card player_id card_id bd =
 let turnover_card killed_id bd card=
   let killed= find_player killed_id bd in 
   let killed= 
-    if(find_player_card killed_id card bd = 1) then {killed with card_one=Deck.set_status killed.card_one Deck.FaceDown} else
-    if(find_player_card killed_id card bd = 2) then {killed with card_two=Deck.set_status killed.card_two Deck.FaceDown} else killed in
-  replace_player killed_id killed bd
+    if(find_player_card killed_id card bd = 1) then 
+      {killed with card_one=Deck.set_status killed.card_one Deck.FaceDown} else
+    if(find_player_card killed_id card bd = 2) then 
+      {killed with card_two=Deck.set_status killed.card_two Deck.FaceDown} 
+    else killed in replace_player killed_id killed bd
 
 (*NOTE: This and coup I had intended to be called after the person losing a card
   chooses what card to turn over *)
@@ -193,11 +198,11 @@ let tax player_name bd =
 let extract_legal b = match b with
   | Legal i -> i
   | Illegal -> { (*place holder board because illegal should never be used*)
-    current_deck = []; (*init deck does not exist yet*)
-    current_players = [];
-    turn_order = [];
-    turn = 0;
-    money_pool = 0;
-  }
+      current_deck = []; (*init deck does not exist yet*)
+      current_players = [];
+      turn_order = [];
+      turn = 0;
+      money_pool = 0;
+    }
 
 

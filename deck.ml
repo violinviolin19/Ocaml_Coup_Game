@@ -6,9 +6,17 @@ type card = character * status
 type t = card list 
 type money_pool = int (* denotes how much money is in the pool*)
 
+
 (** [shuffle deck] gives a random permutation of [deck]. *)
 let shuffle deck = 
   QCheck.Gen.(generate1 (shuffle_l deck))
+
+let init_deck = 
+  shuffle [(Duke, Deck);(Duke, Deck);(Duke, Deck); 
+           (Assassin, Deck);(Assassin, Deck);(Assassin, Deck);
+           (Contessa, Deck);(Contessa, Deck);(Contessa, Deck);
+           (Captain, Deck);(Captain, Deck);(Captain, Deck);
+           (Ambassador, Deck);(Ambassador, Deck);(Ambassador, Deck)]
 
 (** [draw deck] gives the top card of the deck. *)
 let draw deck = 
