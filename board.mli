@@ -31,7 +31,7 @@ val get_cards : string -> t -> Deck.card list
 
 val steal : string-> string-> t-> t
 
-val assassinate : string->string->t->string->t
+val assassinate : string->string->t->string->result
 
 val coup : string->string->t->string->t
 
@@ -46,6 +46,10 @@ val extract_legal : result -> t
 val get_money : string->t->int
 
 val get_host : t->player
+
+val check_id : string->t->bool
+
+val find_facedown : string->t->Deck.card
 
 
 

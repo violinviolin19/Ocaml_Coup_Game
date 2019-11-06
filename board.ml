@@ -14,7 +14,7 @@ type player = {
 type t = {
   current_deck : Deck.t;
   current_players : player list;
-  turn_order : (int*player) list;
+  turn_order : (int*string) list;
   turn: int;
   money_pool: int;
 }
@@ -25,14 +25,30 @@ let next_turn bd=
   let next = if(bd.turn=(List.length bd.current_players) -1) then 0 else bd.turn+1 in
   {bd with turn= next}
 
-let current_player bd=
-  List.assoc bd.turn bd.turn_order
-
-let current_player_id bd=
-  (List.assoc bd.turn bd.turn_order).id
+(**[find_player player bd] is the player in [bd] identified by [player]. *)
+let find_player player bd =
+  let rec check_lst = function
+    |[]->raise(InvalidPlayer player)
+    |h::t when h.id=player -> h
+    |h::t-> check_lst t in
+  check_lst bd.current_players
 
 let get_host bd=
-  List.hd bd.current_players
+  find_player (snd (List.hd bd.turn_order)) bd
+
+let current_player bd=
+  find_player (List.assoc bd.turn bd.turn_order) bd
+
+let current_player_id bd=
+  (List.assoc bd.turn bd.turn_order)
+
+
+let check_id player_id bd=
+  let rec check_list = function
+    |[]-> false
+    |h::t when h.id=player_id -> true
+    |h::t -> check_list t in
+  check_list bd.current_players
 
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
@@ -61,7 +77,7 @@ let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
 let generate_player deck id is_ai=
   let set_cards pair=
     match pair with
-    |((c1,c2),d)-> (Deck.set_status c1 Deck.FaceUp, Deck.set_status c2 Deck.FaceUp) in
+    |((c1,c2),d)-> (Deck.set_status c1 Deck.FaceDown, Deck.set_status c2 Deck.FaceDown) in
   let pair = deal_pair deck in
   let cards = set_cards pair in
   ({
@@ -96,18 +112,11 @@ let init_board deck num_players =
   {
     current_deck= snd info;
     current_players= fst info;
-    turn_order= assign_turns 0 (fst info);
+    turn_order= assign_turns 0 (List.map (fun h -> h.id) (fst info));
     turn= 0;
     money_pool = 30
   }
 
-(**[find_player player bd] is the player in [bd] identified by [player]. *)
-let find_player player bd =
-  let rec check_lst = function
-    |[]->raise(InvalidPlayer player)
-    |h::t when h.id=player -> h
-    |h::t-> check_lst t in
-  check_lst bd.current_players
 
 (** [check_bank player_id int bd] is true iff the player with id of [player_id]
     in [bd] has at least [cash] coins.*)
@@ -159,16 +168,27 @@ let turnover_card killed_id bd card=
   let killed= find_player killed_id bd in 
   let killed= 
     if(find_player_card killed_id card bd = 1) then 
-      {killed with card_one=Deck.set_status killed.card_one Deck.FaceDown} else
+      {killed with card_one=Deck.set_status killed.card_one Deck.FaceUp} else
     if(find_player_card killed_id card bd = 2) then 
-      {killed with card_two=Deck.set_status killed.card_two Deck.FaceDown} 
+      {killed with card_two=Deck.set_status killed.card_two Deck.FaceUp} 
     else killed in replace_player killed_id killed bd
+
+let find_facedown player_id bd=
+  match get_cards player_id bd with
+  |[]->failwith "impossible, no cards"
+  |h::t when snd h = Deck.FaceDown -> h
+  |h::t -> List.hd t
+
 
 (*NOTE: This and coup I had intended to be called after the person losing a card
   chooses what card to turn over *)
 let assassinate killer_id killed_id bd card_id=
-  let killer_paid = change_money killer_id bd (-3) in
-  turnover_card killed_id killer_paid card_id
+  try 
+    let killer_paid = change_money killer_id bd (-3) in
+    Legal (turnover_card killed_id killer_paid card_id)
+  with
+    _ -> Illegal
+
 
 let coup couper_id couped_id bd card_id=
   let couper_paid = change_money couper_id bd (-7) in

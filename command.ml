@@ -22,10 +22,10 @@ let parse str =
     | h::t -> begin 
         match h with 
         | "steal" -> if t = [] then raise Malformed else Steal t
-        | "assassinate" -> if t = [] then raise Malformed else Assassinate t
+        | "assassinate" -> if List.length t = 1 then Assassinate t else raise Malformed
         | "coup" -> if t = [] then raise Malformed else Coup t
         | "income" -> if t = [] then Income else raise Malformed 
-        | "foreign aid" -> if t = [] then Foreign_Aid else raise Malformed
+        | "foreign" -> if t = ["aid"] then Foreign_Aid else raise Malformed
         | "tax" -> if t = [] then Tax else raise Malformed
         | "quit" -> if t = [] then Quit else raise Malformed
         | _ -> raise Malformed

@@ -44,9 +44,9 @@ let rec play_game b =
         print_string "\n> ";
         play_game (next_turn legal_item)
       else 
-        print_endline "That's not a valid command to take foreign aid try again.\n";
-      print_string "\n> ";
-      play_game b
+        (print_endline "That's not a valid command to take foreign aid try again.\n";
+         print_string "\n> ";
+         play_game b)
 
     | Tax -> let new_b = tax (current_player_id b) b in
       if new_b != Illegal then 
@@ -55,9 +55,25 @@ let rec play_game b =
         print_string "\n> ";
         play_game (next_turn legal_item)
       else
-        print_endline "That's not a valid command to take tax try again\n";
-      print_string "\n> ";
-      play_game b;
+        (print_endline "That's not a valid command to take tax try again\n";
+         print_string "\n> ";
+         play_game b;)
+    |Assassinate killed_id -> let killed_id = List.hd killed_id in
+      let card= Deck.get_name (Board.find_facedown killed_id b) in
+      if(check_id killed_id b) then 
+        let new_b= assassinate (current_player_id b) killed_id b card in 
+        if new_b != Illegal then
+          let legal_item = extract_legal new_b in
+          print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+          print_string "\n> ";
+          play_game (next_turn legal_item) 
+        else 
+          play_game b
+      else
+        (print_endline "That isn't a player";
+         print_string "\n> ";
+         play_game b)
+
     | _ -> ()
 
   with
