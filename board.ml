@@ -22,7 +22,8 @@ type t = {
 type result = Legal of t | Illegal
 
 let next_turn bd=
-  {bd with turn= bd.turn+1}
+  let next = if(bd.turn=(List.length bd.current_players) -1) then 0 else bd.turn+1 in
+  {bd with turn= next}
 
 let current_player bd=
   List.assoc bd.turn bd.turn_order
