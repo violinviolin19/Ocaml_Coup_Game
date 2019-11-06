@@ -27,6 +27,9 @@ let next_turn bd=
 let current_player bd=
   List.assoc bd.turn bd.turn_order
 
+let current_player_id bd=
+  (List.assoc bd.turn bd.turn_order).id
+
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
 let turn_info player bd=
@@ -167,12 +170,34 @@ let exchange exchanger_id bd card1 card2=
   {exchanger with card_one=card1; card_two=card2}
 
 let income player_name bd = 
-  if bd.money_pool == 0 then bd else change_money player_name bd 1 
+  try 
+    if bd.money_pool == 0 then Legal bd 
+    else Legal (change_money player_name bd 1) 
+  with
+    _ -> Illegal
 
 let foreign_aid player_name bd = 
-  if bd.money_pool < 2 then bd else change_money player_name bd 2
+  try 
+    if bd.money_pool < 2 then Legal bd 
+    else Legal (change_money player_name bd 2)
+  with
+    _ -> Illegal
 
 let tax player_name bd = 
-  if bd.money_pool < 3 then bd else change_money player_name bd 3
+  try
+    if bd.money_pool < 3 then Legal bd 
+    else Legal (change_money player_name bd 3)
+  with
+    _ -> Illegal
+
+let extract_legal b = match b with
+  | Legal i -> i
+  | Illegal -> { (*place holder board because illegal should never be used*)
+    current_deck = []; (*init deck does not exist yet*)
+    current_players = [];
+    turn_order = [];
+    turn = 0;
+    money_pool = 0;
+  }
 
 

@@ -1,5 +1,5 @@
 
-type deck = Deck of Deck.t | Not_deck
+(* type deck = Deck of Deck.t | Not_deck *)
 exception InvalidPlayer of string
 exception InvalidCard of string
 
@@ -17,6 +17,8 @@ val next_turn : t -> t
 (** The player whose turn it currently is in the board*)
 val current_player: t->player
 
+val current_player_id: t -> string
+
 val turn_info : player->t->string
 
 val is_ai : player -> bool
@@ -25,7 +27,7 @@ val init_board : Deck.t-> int-> t
 
 val check_bank : string->int->t->bool
 
-val get_cards : player -> t -> Deck.card list
+val get_cards : string -> t -> Deck.card list
 
 val steal : string-> string-> t-> t
 
@@ -33,12 +35,13 @@ val assassinate : string->string->t->string->t
 
 val coup : string->string->t->string->t
 
-val income : string->t->t
+val income : string->t->result
 
-val foreign_aid : string->t->t
+val foreign_aid : string->t->result
 
-val tax : string->t->t
+val tax : string->t->result
 
+val extract_legal : result -> t
 
 
 

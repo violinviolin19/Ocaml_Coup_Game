@@ -1,6 +1,7 @@
 type object_phrase = string list
 
 type command = 
+  | Quit
   | Steal of object_phrase
   | Assassinate of object_phrase
   | Coup of object_phrase
