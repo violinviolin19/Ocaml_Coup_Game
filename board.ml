@@ -31,6 +31,9 @@ let current_player bd=
 let current_player_id bd=
   (List.assoc bd.turn bd.turn_order).id
 
+let get_host bd=
+  List.hd bd.current_players
+
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
 let turn_info player bd=
@@ -56,11 +59,15 @@ let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
 
 
 let generate_player deck id is_ai=
+  let set_cards pair=
+    match pair with
+    |((c1,c2),d)-> (Deck.set_status c1 Deck.FaceUp, Deck.set_status c2 Deck.FaceUp) in
   let pair = deal_pair deck in
+  let cards = set_cards pair in
   ({
     id= id;
-    card_one= fst (fst pair);
-    card_two= snd (fst pair);
+    card_one= fst (cards);
+    card_two= snd (cards);
     money= 2;
     ai= is_ai;
     alive= true;

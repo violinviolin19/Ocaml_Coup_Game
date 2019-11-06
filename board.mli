@@ -45,5 +45,7 @@ val extract_legal : result -> t
 
 val get_money : string->t->int
 
+val get_host : t->player
+
 
 
