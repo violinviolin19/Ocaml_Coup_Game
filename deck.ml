@@ -13,7 +13,7 @@ let shuffle deck =
 (** [draw deck] gives the top card of the deck. *)
 let draw deck = 
   match deck with 
-  | [] -> failwith "This won't happen"
+  | [] -> failwith "This won't happen (draw failed)"
   | h :: t -> (h,t) 
 
 (** [draw deck] gives the first two cards of the deck. This is to be used 
@@ -21,7 +21,7 @@ let draw deck =
 let draw2 deck =
   match deck with 
   | h :: h2 :: t -> ([h;h2],t)
-  | _ -> failwith "This won't happen"
+  | _ -> failwith "This won't happen (draw2 failed)"
 
 (** [to_list_helper deck lst] gives a list of all the cards in the deck
     in reverse order. *)
