@@ -33,7 +33,7 @@ val steal : string-> string-> t-> result
 
 val assassinate : string->string->t->string->result
 
-val coup : string->string->t->string->t
+val coup : string->string->t->string->result
 
 val income : string->t->result
 

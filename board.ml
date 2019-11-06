@@ -194,8 +194,11 @@ let assassinate killer_id killed_id bd card_id=
 
 
 let coup couper_id couped_id bd card_id=
-  let couper_paid = change_money couper_id bd (-7) in
-  turnover_card couped_id couper_paid card_id
+  try
+    let couper_paid = change_money couper_id bd (-7) in
+    Legal (turnover_card couped_id couper_paid card_id)
+  with
+    _ -> Illegal
 
 let view_four exchanger_id bd=
   let pair= deal_pair bd.current_deck in
