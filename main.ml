@@ -74,8 +74,8 @@ let rec play_game b =
          print_string "\n> ";
          play_game b;)
     |Assassinate killed_id -> let killed_id = List.hd killed_id in
-      let card= Deck.get_name (Board.find_facedown killed_id b) in
-      if(check_id killed_id b) then 
+      if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
+        let card= Deck.get_name (Board.find_facedown killed_id b) in
         let new_b= assassinate (current_player_id b) killed_id b card in 
         if new_b != Illegal then
           let legal_item = extract_legal new_b in
@@ -85,12 +85,13 @@ let rec play_game b =
         else 
           play_game b
       else
-        (print_endline "That isn't a player";
+        (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
+         else print_endline "Not enough coins to assassinate";
          print_string "\n> ";
          play_game b)
     |Coup killed_id -> let killed_id = List.hd killed_id in
-      let card= Deck.get_name (Board.find_facedown killed_id b) in
-      if(check_id killed_id b) then 
+      if(check_id killed_id b&&check_bank (current_player_id b) 7 b) then 
+        let card= Deck.get_name (Board.find_facedown killed_id b) in
         let new_b= coup (current_player_id b) killed_id b card in 
         if new_b != Illegal then
           let legal_item = extract_legal new_b in
@@ -100,7 +101,8 @@ let rec play_game b =
         else 
           play_game b
       else
-        (print_endline "That isn't a player";
+        (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
+         else print_endline "Not enough coins to coup";
          print_string "\n> ";
          play_game b)
 
