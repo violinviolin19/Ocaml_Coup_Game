@@ -27,6 +27,6 @@ let parse str =
         | "income" -> if t = [] then Income else raise Malformed 
         | "foreign aid" -> if t = [] then Foreign_Aid else raise Malformed
         | "tax" -> if t = [] then Tax else raise Malformed
-        | "quit" -> Quit
+        | "quit" -> if t = [] then Quit else raise Malformed
         | _ -> raise Malformed
       end
