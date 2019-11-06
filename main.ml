@@ -22,7 +22,7 @@ let rec play_game b =
     | Income -> let new_b = income (current_player_id b) b in 
       if new_b != Illegal then 
         let legal_item = extract_legal new_b in
-        (* print_int(get_money (current_player_id b) legal_item); *)
+        print_int(get_money (current_player_id b)legal_item);
         print_endline (current_player_id b ^ " takes income.");
         print_string "\n> ";
         play_game (next_turn legal_item) 
