@@ -54,8 +54,8 @@ let get_name card =
 let get_status card = 
   match snd card with 
   | Deck -> "in the deck"
-  | FaceUp -> "in play"
-  | FaceDown -> "out of play"
+  | FaceDown -> "in play"
+  | FaceUp -> "out of play"
 
 let set_status card status=
   (fst card, status)
