@@ -16,11 +16,15 @@ let rec choose_card bd player : card=
 
 
 let rec play_game b = 
+  (*let curr_player = current_player b in
+    if(is_ai curr_player) then
+     let cards_list = get_cards (get_player_id curr_player) b in 
+     if (check_faceup cards_list) then (print_string "Congrats, you win!"; exit 0) 
+     else *)
   if(is_ai (current_player b)) then
     let print = print_endline (current_player_id b^" passes their turn."); in print;
     play_game(next_turn b)
   else
-
     print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0

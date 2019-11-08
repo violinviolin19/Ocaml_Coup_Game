@@ -102,6 +102,9 @@ let generate_player_lst deck num_players =
   let ai_enemy= generate_ai (num_players-1) (snd host) in
   ((fst host)::(List.map fst ai_enemy), last_deck ai_enemy)
 
+let get_player_id player = 
+  player.id
+
 (** [init_board deck num_players] is the first game state of a game generated
     with [deck] and a [num_players] number of players.*)
 let init_board deck num_players =
@@ -181,6 +184,11 @@ let find_facedown player_id bd=
   |[]->failwith "impossible, no cards"
   |h::t when snd h = Deck.FaceDown -> h
   |h::t -> List.hd t
+
+let check_faceup card_list = 
+  match card_list with 
+  | [card1; card2] -> (snd card1 = Deck.FaceUp && snd card2 = Deck.FaceUp)
+  | _ -> failwith "Something went wrong"
 
 
 (*NOTE: This and coup I had intended to be called after the person losing a card
