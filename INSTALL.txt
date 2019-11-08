@@ -1,0 +1,17 @@
+Our system can be installed by following these steps.
+
+1) Download this zip file and unzip it into an empty directory
+
+2) Open up your terminal and navigate to this newly filled directory
+
+3) Type the command "make build" to build the system. No other packages should
+be needed.
+
+4) Then type "make play" to play the game
+
+5) When prompted you can press any key to start the game
+
+Note: We have not yet displayed the rules as part of the system itself but the
+actions that can currently be taken are "tax", "income", "foreign aid", "assassinate ai1"
+(where ai1 is the name of the ai you play against), "coup ai1", and
+"steal ai1". 
