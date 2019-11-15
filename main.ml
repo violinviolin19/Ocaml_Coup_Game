@@ -3,26 +3,24 @@ open Deck
 open Board
 
 
-type card
-
-(** [process_turn bd player] processes [player]'s turn in [bd]*)
-let rec process_turn bd player=
-  failwith "unimplemented"
-
-(** [choose_card bd] is the card [player] chooses to turnover in [bd] *)
-let rec choose_card bd player : card=
+(** [choose_card bd] is the facedown card of [player] that they choose in [bd] *)
+let rec choose_card bd player : string=
   let cards= cards player bd in
+  let card_ids= List.map Deck.get_name (get_cards player bd) in
   print_string ("Which card would you like to turn over?");
   print_string cards;
-  match String.lowercase_ascii (read_line()) with
-  |_->failwith "unimplemented"
+  match String.capitalize_ascii (read_line()) with
+  |s when List.mem s card_ids->s
+  |_->print_string "You do not have a copy of that card facedown, try again"; choose_card bd player
 
 
+(** [player_challenge b action actor] is whether the player decides to challenge
+    [actor]'s choice to perform [action] in [bd].*)
 let rec player_challenge b action actor=
   print_string ("Would you like to challenge "^actor^"'s "^action^". Yes or No?"); 
   match String.lowercase_ascii (read_line()) with
-  |"yes"->""
-  |"no"->""
+  |"yes"->true
+  |"no"->false
   |_->print_string ("Invalid choice, try again."); player_challenge b action actor
 
 

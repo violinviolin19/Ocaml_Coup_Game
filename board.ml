@@ -257,4 +257,12 @@ let extract_legal b = match b with
       money_pool = 0;
     }
 
+(** [can_act actor_name action_name bd] is [true] if [actor_name] can perform
+    [action_name] in [bd]. *)
+let can_act actor_name action_name bd =
+  let actor_cards= get_cards actor_name bd in
+  let actions= List.map Deck.get_action actor_cards in
+  match action_name with
+  |s when List.mem (String.capitalize_ascii s) actions -> true
+  |_ -> false
 

@@ -57,6 +57,14 @@ let get_status card =
   | FaceDown -> "in play"
   | FaceUp -> "out of play"
 
+let get_action card =
+  match fst card with
+  |Duke -> "Tax"
+  |Assassin -> "Assassinate"
+  |Contessa -> "None"
+  |Captain -> "Steal"
+  |Ambassador -> "Exchange" 
+
 let is_facedown card =
   snd card = FaceDown
 
