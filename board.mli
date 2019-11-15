@@ -55,4 +55,5 @@ val get_player_id : player -> string
 
 val check_faceup : Deck.card list -> bool
 
+val cards : string -> t -> string
 

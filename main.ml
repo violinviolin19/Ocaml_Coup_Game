@@ -11,16 +11,26 @@ let rec process_turn bd player=
 
 (** [choose_card bd] is the card [player] chooses to turnover in [bd] *)
 let rec choose_card bd player : card=
-  failwith "unimplemented"
+  let cards= cards player bd in
+  print_string ("Which card would you like to turn over?");
+  print_string cards;
+  match String.lowercase_ascii (read_line()) with
+  |_->failwith "unimplemented"
 
+
+let rec player_challenge b action actor=
+  print_string ("Would you like to challenge "^actor^"'s "^action^". Yes or No?"); 
+  match String.lowercase_ascii (read_line()) with
+  |"yes"->""
+  |"no"->""
+  |_->print_string ("Invalid choice, try again."); player_challenge b action actor
 
 
 let rec play_game b = 
-  (*let curr_player = current_player b in
-    if(is_ai curr_player) then
-     let cards_list = get_cards (get_player_id curr_player) b in 
-     if (check_faceup cards_list) then (print_string "Congrats, you win!"; exit 0) 
-     else *)
+  let curr_player = current_player b in
+  let cards_list = get_cards (current_player_id b) b in 
+  if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
+  else 
   if(is_ai (current_player b)) then
     let print = print_endline (current_player_id b^" passes their turn."); in print;
     play_game(next_turn b)

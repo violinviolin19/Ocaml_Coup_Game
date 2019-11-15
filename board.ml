@@ -19,6 +19,7 @@ type t = {
   money_pool: int;
 }
 
+
 type result = Legal of t | Illegal
 
 let next_turn bd=
@@ -32,6 +33,7 @@ let find_player player bd =
     |h::t when h.id=player -> h
     |h::t-> check_lst t in
   check_lst bd.current_players
+
 
 let get_host bd=
   find_player (snd (List.hd bd.turn_order)) bd
@@ -189,6 +191,14 @@ let check_faceup card_list =
   match card_list with 
   | [card1; card2] -> (snd card1 = Deck.FaceUp && snd card2 = Deck.FaceUp)
   | _ -> failwith "Something went wrong"
+
+let cards player_id bd=
+  let card_list =get_cards player_id bd in
+  let facedown_cards= List.filter Deck.is_facedown card_list in
+  match List.map Deck.get_name facedown_cards with
+  |c1::c2::[]->"A "^c1^"and a "^c2
+  |c1::[]->"A "^c1
+  |_->failwith "impossible"
 
 
 (*NOTE: This and coup I had intended to be called after the person losing a card

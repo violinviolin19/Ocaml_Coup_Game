@@ -43,7 +43,7 @@ let rec to_list_helper deck lst =
 let get_deck deck = 
   List.rev(to_list_helper deck [])
 
-let get_name card = 
+let get_name card : string= 
   match fst card with 
   |Duke -> "Duke"
   |Assassin -> "Assassin"
@@ -56,6 +56,9 @@ let get_status card =
   | Deck -> "in the deck"
   | FaceDown -> "in play"
   | FaceUp -> "out of play"
+
+let is_facedown card =
+  snd card = FaceDown
 
 let set_status card status=
   (fst card, status)
