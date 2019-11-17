@@ -22,6 +22,12 @@ type t = {
 
 type result = Legal of t | Illegal
 
+let player_names bd=
+  List.map (fun x->x.id) bd.current_players
+
+let check_pool bd=
+  bd.money_pool
+
 let next_turn bd=
   let next = if(bd.turn=(List.length bd.current_players) -1) then 0 else bd.turn+1 in
   {bd with turn= next}
@@ -143,10 +149,10 @@ let rec get_cards player bd=
   let desired_player = find_player player bd in
   [desired_player.card_one;desired_player.card_two]
 
-(** [get_money player bd] is the amount of money that the player identified by
+(** [get_money bd player] is the amount of money that the player identified by
     [player] has in [bd]. If [player] is not a player in [bd] then raise an
     invalid player exception. *)
-let get_money player bd=
+let get_money bd player=
   let desired_player= find_player player bd in 
   desired_player.money
 
@@ -157,7 +163,8 @@ let get_money player bd=
 let change_money player_name bd cash=
   let player= find_player player_name bd in
   let new_player= {player with money=player.money+cash} in
-  replace_player player_name new_player bd
+  let change_player=replace_player player_name new_player bd in
+  {change_player with money_pool= change_player.money_pool - cash}
 
 let steal stealer_id stolen_id bd=
   try
@@ -174,12 +181,20 @@ let find_player_card player_id card_id bd =
 
 let turnover_card killed_id bd card=
   let killed= find_player killed_id bd in 
-  let killed= 
-    if(find_player_card killed_id card bd = 1) then 
-      {killed with card_one=Deck.set_status killed.card_one Deck.FaceUp} else
-    if(find_player_card killed_id card bd = 2) then 
-      {killed with card_two=Deck.set_status killed.card_two Deck.FaceUp} 
-    else killed in replace_player killed_id killed bd
+  if(Deck.get_name killed.card_one<>Deck.get_name killed.card_two) then
+    let killed= 
+      if(find_player_card killed_id card bd = 1) then 
+        {killed with card_one=Deck.set_status killed.card_one Deck.FaceUp} else
+      if(find_player_card killed_id card bd = 2) then 
+        {killed with card_two=Deck.set_status killed.card_two Deck.FaceUp} 
+      else killed in replace_player killed_id killed bd
+  else 
+    let killed=
+      if(not (Deck.is_facedown killed.card_one)) then
+        {killed with card_two= Deck.set_status killed.card_two Deck.FaceUp}
+      else 
+        {killed with card_one=Deck.set_status killed.card_one Deck.FaceUp}
+    in replace_player killed_id killed bd
 
 let find_facedown player_id bd=
   match get_cards player_id bd with
@@ -192,11 +207,13 @@ let check_faceup card_list =
   | [card1; card2] -> (snd card1 = Deck.FaceUp && snd card2 = Deck.FaceUp)
   | _ -> failwith "Something went wrong"
 
+
+(** [cards player_id bd] are the cards that [player_id] has face down in [bd].*)
 let cards player_id bd=
   let card_list =get_cards player_id bd in
   let facedown_cards= List.filter Deck.is_facedown card_list in
   match List.map Deck.get_name facedown_cards with
-  |c1::c2::[]->"A "^c1^"and a "^c2
+  |c1::c2::[]->"A "^c1^" and a "^c2
   |c1::[]->"A "^c1
   |_->failwith "impossible"
 

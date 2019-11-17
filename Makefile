@@ -1,4 +1,4 @@
-MODULES=board command deck main authors
+MODULES=artificial board command deck main authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

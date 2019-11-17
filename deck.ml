@@ -11,7 +11,7 @@ type money_pool = int (* denotes how much money is in the pool*)
 let shuffle deck = 
   QCheck.Gen.(generate1 (shuffle_l deck))
 
-let init_deck = 
+let init_deck a = 
   shuffle [(Duke, Deck);(Duke, Deck);(Duke, Deck); 
            (Assassin, Deck);(Assassin, Deck);(Assassin, Deck);
            (Contessa, Deck);(Contessa, Deck);(Contessa, Deck);

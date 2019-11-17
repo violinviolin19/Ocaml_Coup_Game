@@ -43,7 +43,7 @@ val tax : string->t->result
 
 val extract_legal : result -> t
 
-val get_money : string->t->int
+val get_money : t->string->int
 
 val get_host : t->player
 
@@ -56,4 +56,13 @@ val get_player_id : player -> string
 val check_faceup : Deck.card list -> bool
 
 val cards : string -> t -> string
+
+(** [check_pool bd] is the amount of money avalaible in the center in [bd].*)
+val check_pool : t->int
+
+val player_names : t -> string list
+
+val can_act : string -> string -> t -> bool
+
+val turnover_card : string -> t -> string -> t
 
