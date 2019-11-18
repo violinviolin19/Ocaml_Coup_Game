@@ -70,3 +70,5 @@ val view_four : string -> t -> (Deck.card list * Deck.t)
 
 val exchange : string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
 
+val has_both : string -> t -> bool
+

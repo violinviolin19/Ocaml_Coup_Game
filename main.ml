@@ -13,7 +13,7 @@ let rec choose_card bd player : string=
   |_->print_string "You do not have a copy of that card facedown, try again"; choose_card bd player
 
 
-let choose_two cards =
+let choose_two cards can_get_both=
   let rec list_to_string = function
     |[] -> ""
     |h::t-> h ^ " "^list_to_string t in
@@ -32,8 +32,12 @@ let choose_two cards =
   let card_strings= List.map Deck.get_name cards in
   let card1= card_choice card_strings in
   let new_cards= list_remove card1 cards in
-  let card2= card_choice (List.map Deck.get_name new_cards) in
-  ((card1, card2), list_remove card2 new_cards)
+  if(can_get_both) then begin
+    let card2= card_choice (List.map Deck.get_name new_cards) in
+    ((card1, card2), list_remove card2 new_cards)
+  end
+  else 
+    ((card1, card1), new_cards)
 
 
 (** [player_challenge b action actor] is whether the player decides to challenge
@@ -203,8 +207,9 @@ let rec play_game b =
   try match parse (read_line ()) with
     | Quit -> exit 0
     | Exchange -> begin
+        let both= has_both curr_id b in
         let cards= view_four curr_id b in
-        let choice_info = choose_two (fst cards) in
+        let choice_info = choose_two (fst cards) both in
         let discards= snd choice_info in
         let chosen= fst choice_info in
         let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards) discards in

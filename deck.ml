@@ -68,6 +68,9 @@ let get_action card =
 let is_facedown card =
   snd card = FaceDown
 
+let is_faceup card =
+  snd card = FaceUp
+
 let set_status card status=
   (fst card, status)
 

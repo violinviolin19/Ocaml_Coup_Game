@@ -235,11 +235,17 @@ let coup couper_id couped_id bd card_id=
   with
     _ -> Illegal
 
+let has_both player_id bd =
+  let cards = get_cards player_id bd in
+  List.filter Deck.is_faceup cards = []
+
 let view_four exchanger_id bd=
+  let player_cards = get_cards exchanger_id bd in
+  let player_cards= List.filter Deck.is_facedown player_cards in
   let pair= deal_pair bd.current_deck in
   let card1= Deck.set_status (fst (fst pair)) Deck.FaceDown in
   let card2= Deck.set_status (snd (fst pair)) Deck.FaceDown in
-  (card1 :: card2 :: get_cards exchanger_id bd, snd pair)
+  (card1 :: card2 :: player_cards, snd pair)
 
 let exchange exchanger_id bd card1 card2 deck discards=
   (* Rewritten List.map so that first arg is what is in the list*)
@@ -249,10 +255,16 @@ let exchange exchanger_id bd card1 card2 deck discards=
     |h::t -> Deck.set_status h Deck.FaceDown :: t in
   try 
     let exchanger= find_player exchanger_id bd in
-    let exchanged={exchanger with card_one=card1; card_two=card2} in
+
+    let exchanged= begin
+      if(has_both exchanger_id bd) then {exchanger with card_one=card1; card_two=card2} else
+      if(Deck.is_facedown exchanger.card_one) then {exchanger with card_one=card1} else {exchanger with card_two = card1}
+    end
+    in
     let player_swapped=replace_player exchanger_id exchanged bd in
     let new_board= {player_swapped with current_deck = Deck.shuffle (set_deck discards @ deck)} in 
     Legal new_board
+
   with 
     _ -> Illegal
 
@@ -295,4 +307,3 @@ let can_act actor_name action_name bd =
   match action_name with
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
-
