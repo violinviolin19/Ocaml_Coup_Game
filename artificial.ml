@@ -16,6 +16,7 @@ type t= {
 }
 
 let random_elt action_lst=
+  Random.self_init ();
   let elt= Random.int(List.length action_lst) in
   List.nth action_lst elt
 
@@ -71,10 +72,10 @@ let new_ai player_id bd=
 
 
 let action ai=
-  if(check_pool ai.board>3&&ai.money<4) then random_income ai else
+  if(check_pool ai.board>3&&ai.money<3) then random_income ai else
   if(check_pool ai.board<3&&ai.money<3) then Steal (random_elt ai.players) else
   if(ai.money>7) then Coup (random_elt ai.players) else
-  if(check_pool ai.board>3&&ai.money>3) then random_basic ai else
+  if(check_pool ai.board>3&&ai.money>2) then random_basic ai else
   if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
     Assassinate (random_elt ai.players)
 
