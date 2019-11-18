@@ -13,6 +13,29 @@ let rec choose_card bd player : string=
   |_->print_string "You do not have a copy of that card facedown, try again"; choose_card bd player
 
 
+let choose_two cards =
+  let rec list_to_string = function
+    |[] -> ""
+    |h::t-> h ^ " "^list_to_string t in
+  let rec list_remove r= function
+    |[]->[]
+    |h::t when Deck.get_name h=Deck.get_name r -> t
+    |h::t -> h:: list_remove r t in
+  let rec card_choice list =
+    print_endline ("Choose one of "^ list_to_string list);
+    match String.capitalize_ascii (read_line ()) with
+    | s -> begin
+        let card= (Deck.name_to_card s, Deck.FaceDown) in
+        if(List.mem s list) then card 
+        else begin print_endline "You cannot choose that card, try again"; card_choice list end 
+      end in
+  let card_strings= List.map Deck.get_name cards in
+  let card1= card_choice card_strings in
+  let new_cards= list_remove card1 cards in
+  let card2= card_choice (List.map Deck.get_name new_cards) in
+  ((card1, card2), list_remove card2 new_cards)
+
+
 (** [player_challenge b action actor] is whether the player decides to challenge
     [actor]'s choice to perform [action] in [bd].*)
 let rec player_challenge b action actor target=
@@ -25,7 +48,6 @@ let rec player_challenge b action actor target=
 
 
 let rec play_game b = 
-  print_endline (turn_info (current_player b) b);
   let curr_player = current_player b in
   let cards_list = get_cards (current_player_id b) b in 
   let curr_id= current_player_id b in
@@ -180,6 +202,22 @@ let rec play_game b =
     print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0
+    | Exchange -> begin
+        let cards= view_four curr_id b in
+        let choice_info = choose_two (fst cards) in
+        let discards= snd choice_info in
+        let chosen= fst choice_info in
+        let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards) discards in
+        if new_b != Illegal then
+          let legal_item = extract_legal (new_b) in
+          print_endline (current_player_id b ^ " Exchanges with the court deck. \n");
+          print_string "\n> ";
+          play_game (next_turn legal_item)
+        else 
+          (* Only needed for syntatic reasons*)
+          play_game b
+
+      end
     | Income -> let new_b = income (current_player_id b) b in 
       if new_b != Illegal then 
         let legal_item = extract_legal new_b in

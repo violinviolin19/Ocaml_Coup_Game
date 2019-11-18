@@ -8,6 +8,7 @@ type command =
   | Income
   | Foreign_Aid 
   | Tax
+  | Exchange
 
 exception Empty
 
@@ -28,5 +29,6 @@ let parse str =
         | "foreign" -> if t = ["aid"] then Foreign_Aid else raise Malformed
         | "tax" -> if t = [] then Tax else raise Malformed
         | "quit" -> if t = [] then Quit else raise Malformed
+        | "exchange" -> if t=[] then Exchange else raise Malformed
         | _ -> raise Malformed
       end

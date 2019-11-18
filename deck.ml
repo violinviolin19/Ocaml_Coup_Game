@@ -70,3 +70,13 @@ let is_facedown card =
 
 let set_status card status=
   (fst card, status)
+
+
+let name_to_card card_id =
+  match String.capitalize_ascii card_id with
+  |"Duke"->Duke
+  |"Assassin"->Assassin
+  |"Contessa"->Contessa
+  |"Captain"-> Captain
+  |"Ambassador"-> Ambassador
+  |_->failwith "Not a valid card"

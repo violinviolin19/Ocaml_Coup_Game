@@ -237,11 +237,24 @@ let coup couper_id couped_id bd card_id=
 
 let view_four exchanger_id bd=
   let pair= deal_pair bd.current_deck in
-  fst (fst pair) :: snd (fst pair) :: get_cards exchanger_id bd
+  let card1= Deck.set_status (fst (fst pair)) Deck.FaceDown in
+  let card2= Deck.set_status (snd (fst pair)) Deck.FaceDown in
+  (card1 :: card2 :: get_cards exchanger_id bd, snd pair)
 
-let exchange exchanger_id bd card1 card2=
-  let exchanger= find_player exchanger_id bd in
-  {exchanger with card_one=card1; card_two=card2}
+let exchange exchanger_id bd card1 card2 deck discards=
+  (* Rewritten List.map so that first arg is what is in the list*)
+  let rec set_deck lst=
+    match lst with
+    |[]->[]
+    |h::t -> Deck.set_status h Deck.FaceDown :: t in
+  try 
+    let exchanger= find_player exchanger_id bd in
+    let exchanged={exchanger with card_one=card1; card_two=card2} in
+    let player_swapped=replace_player exchanger_id exchanged bd in
+    let new_board= {player_swapped with current_deck = Deck.shuffle (set_deck discards @ deck)} in 
+    Legal new_board
+  with 
+    _ -> Illegal
 
 let income player_name bd = 
   try 

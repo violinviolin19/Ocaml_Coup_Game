@@ -66,3 +66,7 @@ val can_act : string -> string -> t -> bool
 
 val turnover_card : string -> t -> string -> t
 
+val view_four : string -> t -> (Deck.card list * Deck.t)
+
+val exchange : string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
+
