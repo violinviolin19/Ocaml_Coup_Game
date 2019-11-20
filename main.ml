@@ -143,13 +143,6 @@ let rec play_game b =
            play_game b)
     | Tax -> 
       print_endline (current_player_id b ^ " tries to take tax. \n");
-      if (player_block b "Tax" (current_player_id b)) then 
-        (print_endline "You blocked the action."; 
-         if (can_block host_id "Tax" b) then 
-           play_game (next_turn b)
-         else 
-           play_game (next_turn (make_player_lie b)))
-      else
       if(player_challenge b "Tax" (current_player_id b)"") then
         if(can_act curr_id "Tax" b) then
           let card_choice = choose_card b host_id in
@@ -245,7 +238,7 @@ let rec play_game b =
   (*play_game(next_turn b)*)
   else
     print_string(everyones_info b ^ "\n");
-    print_string(turn_info (get_host b) b);
+  print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0
     | Exchange -> begin
