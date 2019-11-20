@@ -20,7 +20,7 @@ type t = {
 }
 
 
-type result = Legal of t | Illegal
+type result = Legal of t | Illegal | NoMoney
 
 let player_names bd=
   List.map (fun x->x.id) bd.current_players
@@ -57,6 +57,24 @@ let check_id player_id bd=
     |h::t when h.id=player_id -> true
     |h::t -> check_list t in
   check_list bd.current_players
+
+let rec everyones_info_helper accu player_list bd = (*this needs helper bc of mli*)
+  match player_list with
+  | [] -> accu
+  | h :: t->
+    let card_names= h.id ^ "'s cards are: "^Deck.get_name (h.card_one)^" and "^
+                  Deck.get_name (h.card_two) in
+    let card1_info= ". "^ h.id ^ " has a "^Deck.get_name h.card_one^" "
+                    ^Deck.get_status h.card_one in
+    let card2_info= " and a "^Deck.get_name h.card_two^" "
+                    ^Deck.get_status h.card_two in
+    let money_info= ". "^ h.id ^" has "^ string_of_int h.money ^ " coins. " in
+    let status= h.id ^" is "^ (if(h.alive) then "" else "not ")^"alive." in
+    let player_info = card_names^card1_info^card2_info^money_info^status^"\n" in
+    everyones_info_helper (accu ^ "\n"^ player_info) t bd
+
+let everyones_info bd =
+  everyones_info_helper "" bd.current_players bd
 
 (** [turn_info player bd] is the relevant information [player] will be given
     about themselves during a turn in [bd]. *)
@@ -168,8 +186,15 @@ let change_money player_name bd cash=
 
 let steal stealer_id stolen_id bd=
   try
-    let stealer_given = change_money stealer_id bd 2 in
-    Legal (change_money stolen_id stealer_given (-2))
+    (let stolen_player = (find_player stolen_id bd) in
+    if stolen_player.money >= 2 then
+      let stealer_given = change_money stealer_id bd 2 in
+      Legal (change_money stolen_id stealer_given (-2))
+    else if stolen_player.money = 1 then
+      let stealer_given = change_money stealer_id bd stolen_player.money in
+      Legal (change_money stolen_id stealer_given (-stolen_player.money))
+    else
+      NoMoney) 
   with
     _->Illegal
 
@@ -291,7 +316,7 @@ let tax player_name bd =
 
 let extract_legal b = match b with
   | Legal i -> i
-  | Illegal -> { (*place holder board because illegal should never be used*)
+  | _ -> { (*place holder board because other results should never be used*)
       current_deck = []; (*init deck does not exist yet*)
       current_players = [];
       turn_order = [];

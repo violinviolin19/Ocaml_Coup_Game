@@ -203,6 +203,7 @@ let rec play_game b =
 
   (*play_game(next_turn b)*)
   else
+    print_string(everyones_info b ^ "\n");
     print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0
@@ -249,13 +250,17 @@ let rec play_game b =
     |Steal killed_id -> let killed_id = List.hd killed_id in
       if(check_id killed_id b) then
         let new_b= steal (current_player_id b) killed_id b in
-        if(new_b!= Illegal) then
+        if(new_b!= Illegal && new_b != NoMoney) then
           let legal_item = extract_legal new_b in
           print_endline (current_player_id b ^ " steals from "^killed_id);
           print_string "\n ";
           (play_game(next_turn legal_item))
-        else
+        else if (new_b = Illegal) then
           (print_endline "That's not a valid command to steal try again \n";
+           print_string "\n> ";
+           play_game b)
+        else 
+          (print_endline "You cannot steal from someone with no money \n";
            print_string "\n> ";
            play_game b)
       else
