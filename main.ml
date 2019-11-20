@@ -314,16 +314,25 @@ let rec play_game b =
          print_string "\n> ";
          play_game b;)
     |Assassinate killed_id -> let killed_id = List.hd killed_id in
-      if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
-        let card= Deck.get_name (Board.find_facedown killed_id b) in
-        let new_b= assassinate (current_player_id b) killed_id b card in 
-        if new_b != Illegal then
-          let legal_item = extract_legal new_b in
-          print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
-          print_string "\n> ";
-          play_game (next_turn legal_item) 
+      if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then
+        if(should_block killed_id b "Assassinate" killed_id) then
+          begin
+            print_endline (killed_id^ "blocked your assassination."); 
+            if (can_block killed_id "Assassination" b) then 
+              play_game (next_turn b)
+            else 
+              play_game (next_turn (make_player_lie b))
+          end
         else 
-          play_game b
+          let card= Deck.get_name (Board.find_facedown killed_id b) in
+          let new_b= assassinate (current_player_id b) killed_id b card in 
+          if new_b != Illegal then
+            let legal_item = extract_legal new_b in
+            print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+            print_string "\n> ";
+            play_game (next_turn legal_item) 
+          else 
+            play_game b
       else
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to assassinate";

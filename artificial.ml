@@ -106,16 +106,19 @@ let can_block_assassinate card_list =
   let cards= List.map (Deck.get_name) card_list in
   List.mem "Contessa" cards 
 
-let should_block ai action target=
+let should_block ai_id bd action target=
+  let ai= new_ai ai_id bd in
   Random.self_init ();
   let rand_block= if(Random.int 1 = 1) then true else false in
   match String.capitalize_ascii action with
   |"Steal"-> begin
-      if(target=ai.id&& can_block_steal ai.cards) then true else
-      if(target=ai.id) then rand_block else false
+      if(target=ai_id&& can_block_steal ai.cards) then true else
+      if(target=ai_id) then rand_block else false
     end
   |"Assassinate"-> begin
-      if(target=ai.id && can_block_assassinate ai.cards) then true else false
+      if(target=ai_id && can_block_assassinate ai.cards) then true else 
+      if(target=ai_id && not (Board.has_both ai_id ai.board)) then true
+      else false
     end
   |"Foreign Aid"-> rand_block
   |_ -> failwith "Not a blockable action"
