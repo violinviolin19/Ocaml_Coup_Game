@@ -145,7 +145,7 @@ let rec play_game b =
       print_endline (current_player_id b ^ " tries to take tax. \n");
       if (player_block b "Tax" (current_player_id b)) then 
         (print_endline "You blocked the action."; 
-         if (can_block host_id "Steal" b) then 
+         if (can_block host_id "Tax" b) then 
            play_game (next_turn b)
          else 
            play_game (next_turn (make_player_lie b)))
@@ -182,9 +182,9 @@ let rec play_game b =
            play_game b;)
     |Assassinate killed_id ->
       print_endline (current_player_id b ^ " tries to assassinate "^killed_id);
-      if (player_block b "Steal" (current_player_id b)) then 
+      if (player_block b "Assassinate" (current_player_id b)) then 
         (print_endline "You blocked the action."; 
-         if (can_block killed_id "Steal" b) then 
+         if (can_block killed_id "Assassinate" b) then 
            play_game (next_turn b)
          else 
            play_game (next_turn (make_player_lie b)))
