@@ -9,26 +9,43 @@ type command =
   | Foreign_Aid 
   | Tax
   | Exchange
+  | Block 
+  | Continue
 
 exception Empty
 
 exception Malformed
 
-let parse str =
+
+let make_word_list str = 
   if String.trim str = "" then raise Empty 
-  else let word_list = String.split_on_char ' ' (String.trim str) |> 
-                       List.filter (fun str -> str <> "") in 
-    match word_list with 
-    | [] -> raise Empty 
-    | h::t -> begin 
-        match h with 
-        | "steal" -> if t = [] then raise Malformed else Steal t
-        | "assassinate" -> if List.length t = 1 then Assassinate t else raise Malformed
-        | "coup" -> if t = [] then raise Malformed else Coup t
-        | "income" -> if t = [] then Income else raise Malformed 
-        | "foreign" -> if t = ["aid"] then Foreign_Aid else raise Malformed
-        | "tax" -> if t = [] then Tax else raise Malformed
-        | "quit" -> if t = [] then Quit else raise Malformed
-        | "exchange" -> if t=[] then Exchange else raise Malformed
-        | _ -> raise Malformed
-      end
+  else String.split_on_char ' ' (String.trim str) |> 
+       List.filter (fun str -> str <> "") 
+
+let parse str =
+  let word_list = make_word_list str in 
+  match word_list with 
+  | [] -> raise Empty 
+  | h::t -> begin 
+      match h with 
+      | "steal" -> if t = [] then raise Malformed else Steal t
+      | "assassinate" -> if List.length t = 1 then Assassinate t else raise Malformed
+      | "coup" -> if t = [] then raise Malformed else Coup t
+      | "income" -> if t = [] then Income else raise Malformed 
+      | "foreign" -> if t = ["aid"] then Foreign_Aid else raise Malformed
+      | "tax" -> if t = [] then Tax else raise Malformed
+      | "quit" -> if t = [] then Quit else raise Malformed
+      | "exchange" -> if t=[] then Exchange else raise Malformed
+      | "block" -> if t=[] then Block else raise Malformed
+      | _ -> raise Malformed
+    end
+
+let parse_block str = 
+  let word_list = make_word_list str in 
+  match word_list with 
+  | [] -> raise Empty 
+  | h::t -> begin
+      match h with 
+      | "block" -> if t=[] then Block else raise Malformed
+      | _ -> Continue
+    end

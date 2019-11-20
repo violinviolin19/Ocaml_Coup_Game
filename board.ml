@@ -9,6 +9,7 @@ type player = {
   money: int;
   ai: bool;
   alive: bool;
+  telling_truth: bool;
 }
 
 type t = {
@@ -17,6 +18,7 @@ type t = {
   turn_order : (int*string) list;
   turn: int;
   money_pool: int;
+  last_action: string;
 }
 
 
@@ -113,6 +115,7 @@ let generate_player deck id is_ai=
     money= 2;
     ai= is_ai;
     alive= true;
+    telling_truth = true;
   },snd pair)
 
 let generate_player_lst deck num_players =
@@ -143,7 +146,8 @@ let init_board deck num_players =
     current_players= fst info;
     turn_order= assign_turns 0 (List.map (fun h -> h.id) (fst info));
     turn= 0;
-    money_pool = 30
+    money_pool = 30;
+    last_action = ""
   }
 
 
@@ -322,6 +326,7 @@ let extract_legal b = match b with
       turn_order = [];
       turn = 0;
       money_pool = 0;
+      last_action = "";
     }
 
 (** [can_act actor_name action_name bd] is [true] if [actor_name] can perform
@@ -332,3 +337,42 @@ let can_act actor_name action_name bd =
   match action_name with
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
+
+let can_block actor_name action_name bd =
+  let actor_cards= get_cards actor_name bd in
+  let actions= List.map Deck.get_blocks actor_cards in
+  match action_name with
+  |s when List.mem (String.capitalize_ascii s) actions -> true
+  |_ -> false
+
+
+(* ---------------- Block commands begin here ----------------- *)
+
+let get_last_action bd = 
+  bd.last_action
+
+let set_last_action bd s = 
+  {bd with last_action = s}
+
+let make_player_lie bd = 
+  let curr_player = 
+    current_player bd in
+  replace_player (current_player_id bd) {curr_player with telling_truth = false}
+    bd
+
+let block_duke bd = 
+  if bd.last_action = "foreign aid" then bd else make_player_lie bd
+
+let block_cap_amb bd = 
+  if bd.last_action = "steal" then bd else make_player_lie bd
+
+let block_contessa bd = 
+  if bd.last_action = "assasinate" then bd else make_player_lie bd
+
+let block bd character= 
+  match character with 
+  |"duke" -> Legal (block_duke bd)
+  |"captain"-> Legal (block_cap_amb bd)
+  |"ambassador" -> Legal (block_cap_amb bd)
+  |"contessa" -> Legal (block_contessa bd) 
+  |_ -> Illegal

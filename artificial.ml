@@ -91,3 +91,31 @@ let action_to_string action =
   |Tax->"Tax"
   |Steal target ->"Steal "^target
   *)
+
+let should_challenge ai action=
+  Random.self_init ();
+  if(Board.has_both ai.id ai.board && action="Assassinate "^ai.id) then false else
+  if(action="Assassinate "^ai.id) then true else
+  if(Random.int(1)=1) then true else false
+
+let can_block_steal card_list =
+  let cards= List.map (Deck.get_name) card_list in
+  List.mem "Captain" cards || List.mem "Ambassador" cards
+
+let can_block_assassinate card_list =
+  let cards= List.map (Deck.get_name) card_list in
+  List.mem "Contessa" cards 
+
+let should_block ai action target=
+  Random.self_init ();
+  let rand_block= if(Random.int 1 = 1) then true else false in
+  match String.capitalize_ascii action with
+  |"Steal"-> begin
+      if(target=ai.id&& can_block_steal ai.cards) then true else
+      if(target=ai.id) then rand_block else false
+    end
+  |"Assassinate"-> begin
+      if(target=ai.id && can_block_assassinate ai.cards) then true else false
+    end
+  |"Foreign Aid"-> rand_block
+  |_ -> failwith "Not a blockable action"

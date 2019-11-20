@@ -65,6 +65,14 @@ let get_action card =
   |Captain -> "Steal"
   |Ambassador -> "Exchange" 
 
+let get_blocks card = 
+  match fst card with 
+  |Duke -> "Foreign Aid"
+  |Assassin -> "None"
+  |Contessa -> "Assassinate"
+  |Captain -> "Steal"
+  |Ambassador -> "Steal" 
+
 let is_facedown card =
   snd card = FaceDown
 
