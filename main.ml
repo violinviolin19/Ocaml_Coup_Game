@@ -65,7 +65,7 @@ let rec play_game b =
   let cards_list = get_cards (current_player_id b) b in 
   let curr_id= current_player_id b in
   let host_id = get_player_id (get_host b) in
-  if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "TEMP LOSS MESSAGE \n"; exit 0) else
+  if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
   else 
 
