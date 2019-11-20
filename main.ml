@@ -25,9 +25,13 @@ let choose_two cards can_get_both=
     print_endline ("Choose one of "^ list_to_string list ^ ".\n");
     match String.capitalize_ascii (read_line ()) with
     | s -> begin
-        let card= (Deck.name_to_card s, Deck.FaceDown) in
-        if(List.mem s list) then card 
-        else begin print_endline "You cannot choose that card, try again.\n"; card_choice list end 
+        try
+          let card= (Deck.name_to_card s, Deck.FaceDown) in
+          if(List.mem (String.trim (String.capitalize_ascii s)) list ) then card 
+          else begin print_endline "You cannot choose that card, try again.\n"; card_choice list end 
+        with Deck.InvalidCard s ->
+          print_endline (s^" is not a valid card");
+          card_choice list
       end in
   let card_strings= List.map Deck.get_name cards in
   let card1= card_choice card_strings in

@@ -65,7 +65,7 @@ let rec everyones_info_helper accu player_list bd = (*this needs helper bc of ml
   | [] -> accu
   | h :: t->
     let card_names= h.id ^ "'s cards are: "^Deck.get_name (h.card_one)^" and "^
-                  Deck.get_name (h.card_two) in
+                    Deck.get_name (h.card_two) in
     let card1_info= ". "^ h.id ^ " has a "^Deck.get_name h.card_one^" "
                     ^Deck.get_status h.card_one in
     let card2_info= " and a "^Deck.get_name h.card_two^" "
@@ -191,14 +191,14 @@ let change_money player_name bd cash=
 let steal stealer_id stolen_id bd=
   try
     (let stolen_player = (find_player stolen_id bd) in
-    if stolen_player.money >= 2 then
-      let stealer_given = change_money stealer_id bd 2 in
-      Legal (change_money stolen_id stealer_given (-2))
-    else if stolen_player.money = 1 then
-      let stealer_given = change_money stealer_id bd stolen_player.money in
-      Legal (change_money stolen_id stealer_given (-stolen_player.money))
-    else
-      NoMoney) 
+     if stolen_player.money >= 2 then
+       let stealer_given = change_money stealer_id bd 2 in
+       Legal (change_money stolen_id stealer_given (-2))
+     else if stolen_player.money = 1 then
+       let stealer_given = change_money stealer_id bd stolen_player.money in
+       Legal (change_money stolen_id stealer_given (-stolen_player.money))
+     else
+       NoMoney) 
   with
     _->Illegal
 
@@ -333,7 +333,8 @@ let extract_legal b = match b with
     [action_name] in [bd]. *)
 let can_act actor_name action_name bd =
   let actor_cards= get_cards actor_name bd in
-  let actions= List.map Deck.get_action actor_cards in
+  let facedown_cards= List.filter Deck.is_facedown actor_cards in
+  let actions= List.map Deck.get_action facedown_cards in
   match action_name with
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false

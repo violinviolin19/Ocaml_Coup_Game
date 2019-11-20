@@ -5,6 +5,7 @@ type card = character * status
 
 type t = card list 
 type money_pool = int (* denotes how much money is in the pool*)
+exception InvalidCard of string
 
 
 (** [shuffle deck] gives a random permutation of [deck]. *)
@@ -84,10 +85,11 @@ let set_status card status=
 
 
 let name_to_card card_id =
-  match String.capitalize_ascii card_id with
+  let card= String.trim (String.capitalize_ascii card_id) in
+  match card with
   |"Duke"->Duke
   |"Assassin"->Assassin
   |"Contessa"->Contessa
   |"Captain"-> Captain
   |"Ambassador"-> Ambassador
-  |_->failwith "Not a valid card"
+  |_->raise(InvalidCard card)
