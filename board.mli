@@ -72,3 +72,8 @@ val exchange : string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card lis
 
 val has_both : string -> t -> bool
 
+val block : t -> string -> result
+
+val make_player_lie : t -> t
+
+val can_block : string -> string -> t -> bool

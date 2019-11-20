@@ -22,12 +22,12 @@ let choose_two cards can_get_both=
     |h::t when Deck.get_name h=Deck.get_name r -> t
     |h::t -> h:: list_remove r t in
   let rec card_choice list =
-    print_endline ("Choose one of "^ list_to_string list);
+    print_endline ("Choose one of "^ list_to_string list ^ ".\n");
     match String.capitalize_ascii (read_line ()) with
     | s -> begin
         let card= (Deck.name_to_card s, Deck.FaceDown) in
         if(List.mem s list) then card 
-        else begin print_endline "You cannot choose that card, try again"; card_choice list end 
+        else begin print_endline "You cannot choose that card, try again.\n"; card_choice list end 
       end in
   let card_strings= List.map Deck.get_name cards in
   let card1= card_choice card_strings in
@@ -44,11 +44,20 @@ let choose_two cards can_get_both=
     [actor]'s choice to perform [action] in [bd].*)
 let rec player_challenge b action actor target=
   let if_target= if(action="Tax"||action="Exchange") then "" else " towards "^target in
-  print_string ("Would you like to challenge "^actor^"'s "^action^if_target^". Yes or No?"); 
+  print_string 
+    ("Would you like to challenge "^actor^"'s "^action^if_target^"? Yes or No?"); 
   match String.lowercase_ascii (read_line()) with
   |"yes"->true
   |"no"->false
   |_->print_string ("Invalid choice, try again."); player_challenge b action actor target
+
+let rec player_block b action actor = 
+  print_string ("Would you like to block "^actor^"'s "^action^"? 
+  Either type block or continue. \n"); 
+  match parse_block (String.lowercase_ascii (read_line())) with 
+  | Continue -> false
+  | Block -> true
+  | _ -> failwith "unimplemented"
 
 
 let rec play_game b = 
@@ -75,6 +84,14 @@ let rec play_game b =
       print_string "\n> ";
       play_game b
     |ForeignAid -> let new_b = foreign_aid (current_player_id b) b in
+      print_endline (current_player_id b ^ " tries to take foreign aid");
+      if (player_block b "Foreign Aid" (current_player_id b)) then 
+        (print_endline "You blocked the action."; 
+         if (can_block host_id "Foreign Aid" b) then 
+           play_game (next_turn b)
+         else 
+           play_game (next_turn (make_player_lie b)))
+      else 
       if new_b != Illegal then
         let legal_item = extract_legal (new_b) in
         print_endline (current_player_id b ^ " takes foreign aid. \n");
@@ -85,10 +102,18 @@ let rec play_game b =
          print_string "\n> ";
          play_game b)
     |Steal killed_id ->
+      print_endline (current_player_id b ^ " tries to steal from "^killed_id);
+      if (player_block b "Steal" (current_player_id b)) then 
+        (print_endline "You blocked the action."; 
+         if (can_block killed_id "Steal" b) then 
+           play_game (next_turn b)
+         else 
+           play_game (next_turn (make_player_lie b)))
+      else
       if(player_challenge b "Steal" (current_player_id b) killed_id) then
         if(can_act curr_id "Steal" b) then
           let card_choice = choose_card b host_id in
-          print_string ("You have failed in your challenge, now you must turnover your "^card_choice);
+          print_string ("You have failed in your challenge, now you must turnover your "^card_choice ^ "\n");
           let turnover= turnover_card host_id b card_choice in
           let new_b= steal (current_player_id b) killed_id turnover in
           if(new_b!= Illegal) then
@@ -102,7 +127,7 @@ let rec play_game b =
              play_game b)
         else
           let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
-          print_string("You were right! "^curr_id^" turns over their "^card_choice);
+          print_string("You were right! "^curr_id^" turns over their "^card_choice ^ "\n");
           let turnover= turnover_card curr_id b card_choice in
           play_game (next_turn turnover)
       else
@@ -117,6 +142,14 @@ let rec play_game b =
            print_string "\n> ";
            play_game b)
     | Tax -> 
+      print_endline (current_player_id b ^ " tries to take tax. \n");
+      if (player_block b "Tax" (current_player_id b)) then 
+        (print_endline "You blocked the action."; 
+         if (can_block host_id "Steal" b) then 
+           play_game (next_turn b)
+         else 
+           play_game (next_turn (make_player_lie b)))
+      else
       if(player_challenge b "Tax" (current_player_id b)"") then
         if(can_act curr_id "Tax" b) then
           let card_choice = choose_card b host_id in
@@ -148,11 +181,19 @@ let rec play_game b =
            print_string "\n> ";
            play_game b;)
     |Assassinate killed_id ->
+      print_endline (current_player_id b ^ " tries to assassinate "^killed_id);
+      if (player_block b "Steal" (current_player_id b)) then 
+        (print_endline "You blocked the action."; 
+         if (can_block killed_id "Steal" b) then 
+           play_game (next_turn b)
+         else 
+           play_game (next_turn (make_player_lie b)))
+      else
       if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
         if(player_challenge b "Assassinate" (current_player_id b) killed_id) then
           if(can_act curr_id "Assassinate" b) then
             let card_choice = choose_card b host_id in
-            print_string ("You have failed in your challenge, now you must turnover "^card_choice);
+            print_string ("You have failed in your challenge, now you must turnover "^card_choice ^ "\n") ;
             let turnover= turnover_card host_id b card_choice in
             let card= if(killed_id=host_id) then choose_card turnover host_id else Deck.get_name (Board.find_facedown killed_id turnover) in
             let new_b= assassinate (current_player_id turnover) killed_id turnover card in 
@@ -166,7 +207,7 @@ let rec play_game b =
               play_game b
           else
             let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
-            print_string("You were right! "^curr_id^" turns over their "^card_choice);
+            print_string("You were right! "^curr_id^" turns over their "^card_choice^ "\n");
             play_game (next_turn (turnover_card curr_id b card_choice))
         else
           let card= if(killed_id=host_id) then choose_card b host_id else Deck.get_name (Board.find_facedown killed_id b) in
@@ -199,7 +240,7 @@ let rec play_game b =
          else print_endline "Not enough coins to coup";
          print_string "\n> ";
          play_game b)
-    | _-> failwith "unimplemented"
+    | _ -> failwith "unimplemented"
 
   (*play_game(next_turn b)*)
   else
@@ -215,7 +256,7 @@ let rec play_game b =
         let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards) discards in
         if new_b != Illegal then
           let legal_item = extract_legal (new_b) in
-          print_endline (current_player_id b ^ " Exchanges with the court deck. \n");
+          print_endline (current_player_id b ^ " exchanges with the court deck. \n");
           print_string "\n> ";
           play_game (next_turn legal_item)
         else 
@@ -304,14 +345,27 @@ let rec play_game b =
          else print_endline "Not enough coins to coup";
          print_string "\n> ";
          play_game b)
+    |Block -> (*let blocked_id = List.hd blocked_id in 
+                           let result = block b blocked_id in 
+                           if result = Illegal then (
+                           print_endline "Not a valid character that can block.";
+                           print_string "\n> ";
+                           play_game b)
+                           else 
+                           let legal_item = extract_legal result in 
+                           print_endline "You blocked the last action.\n";
+                           play_game (next_turn legal_item) *)
+      play_game (next_turn b)
+    | Continue -> play_game (next_turn b)
 
   with
   | Empty -> print_endline "You entered nothing, try again.\n"; 
     print_string "\n> ";
     play_game b 
-  | Malformed -> print_endline "That wasn't understandable plz English.\n";
+  | Malformed -> print_endline "That wasn't understandable, try again.\n";
     print_string "\n> ";
     play_game b 
+
 
 
 
