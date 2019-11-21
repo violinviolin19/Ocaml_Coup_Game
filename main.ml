@@ -69,6 +69,7 @@ let rec play_game b =
   let cards_list = get_cards (current_player_id b) b in 
   let curr_id= current_player_id b in
   let host_id = get_player_id (get_host b) in
+  let non_cur_players= List.filter (fun x -> x<>host_id) (List.filter (fun x -> x<>curr_id) (player_names b)) in 
   if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
   else 
@@ -96,15 +97,26 @@ let rec play_game b =
          else 
            play_game (next_turn (make_player_lie b)))
       else 
-      if new_b != Illegal then
-        let legal_item = extract_legal (new_b) in
-        print_endline (current_player_id b ^ " takes foreign aid. \n");
-        print_string "\n> ";
-        play_game (next_turn legal_item)
-      else 
-        (print_endline "That's not a valid command to take foreign aid try again.\n";
-         print_string "\n> ";
-         play_game b)
+        let ai_blocker= should_any_block non_cur_players b "Foreign Aid" curr_id in
+        if(not (fst ai_blocker)) then
+          if new_b != Illegal then
+            let legal_item = extract_legal (new_b) in
+            print_endline (current_player_id b ^ " takes foreign aid. \n");
+            print_string "\n> ";
+            play_game (next_turn legal_item)
+          else 
+            (print_endline "That's not a valid command to take foreign aid try again.\n";
+             print_string "\n> ";
+             play_game b)
+        else
+          begin
+            let blocker= snd ai_blocker in
+            print_endline (blocker^ "blocked "^curr_id^"'s foreign aid."); 
+            if (can_block blocker "Steal" b) then 
+              play_game (next_turn b)
+            else 
+              play_game (next_turn (make_player_lie b))
+          end
     |Steal killed_id ->
       print_endline (current_player_id b ^ " tries to steal from "^killed_id);
       if (player_block b "Steal" (current_player_id b)) then 
@@ -114,37 +126,47 @@ let rec play_game b =
          else 
            play_game (next_turn (make_player_lie b)))
       else
-      if(player_challenge b "Steal" (current_player_id b) killed_id) then
-        if(can_act curr_id "Steal" b) then
-          let card_choice = choose_card b host_id in
-          print_string ("You have failed in your challenge, now you must turnover your "^card_choice ^ "\n");
-          let turnover= turnover_card host_id b card_choice in
-          let new_b= steal (current_player_id b) killed_id turnover in
-          if(new_b!= Illegal) then
-            let legal_item = extract_legal new_b in
-            print_endline (current_player_id b ^ " steals from "^killed_id);
-            print_string "\n ";
-            (play_game(next_turn legal_item))
+        let ai_blocker = should_any_block non_cur_players b "Steal" killed_id in
+        if(not (fst ai_blocker)) then
+          if(player_challenge b "Steal" (current_player_id b) killed_id) then
+            if(can_act curr_id "Steal" b) then
+              let card_choice = choose_card b host_id in
+              print_string ("You have failed in your challenge, now you must turnover your "^card_choice ^ "\n");
+              let turnover= turnover_card host_id b card_choice in
+              let new_b= steal (current_player_id b) killed_id turnover in
+              if(new_b!= Illegal) then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " steals from "^killed_id);
+                print_string "\n ";
+                (play_game(next_turn legal_item))
+              else
+                (print_endline "That's not a valid command to steal try again \n";
+                 print_string "\n> ";
+                 play_game b)
+            else
+              let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
+              print_string("You were right! "^curr_id^" turns over their "^card_choice ^ "\n");
+              let turnover= turnover_card curr_id b card_choice in
+              play_game (next_turn turnover)
           else
-            (print_endline "That's not a valid command to steal try again \n";
-             print_string "\n> ";
-             play_game b)
-        else
-          let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
-          print_string("You were right! "^curr_id^" turns over their "^card_choice ^ "\n");
-          let turnover= turnover_card curr_id b card_choice in
-          play_game (next_turn turnover)
-      else
-        let new_b= steal (current_player_id b) killed_id b in
-        if(new_b!= Illegal) then
-          let legal_item = extract_legal new_b in
-          print_endline (current_player_id b ^ " steals from "^killed_id);
-          print_string "\n ";
-          (play_game(next_turn legal_item))
-        else
-          (print_endline "That's not a valid command to steal try again \n";
-           print_string "\n> ";
-           play_game b)
+            let new_b= steal (current_player_id b) killed_id b in
+            if(new_b!= Illegal) then
+              let legal_item = extract_legal new_b in
+              print_endline (current_player_id b ^ " steals from "^killed_id);
+              print_string "\n ";
+              (play_game(next_turn legal_item))
+            else
+              (print_endline "That's not a valid command to steal try again \n";
+               print_string "\n> ";
+               play_game b)
+        else begin
+          let blocker= snd ai_blocker in
+          print_endline (blocker^ "blocked the steal."); 
+          if (can_block blocker "Steal" b) then 
+            play_game (next_turn b)
+          else 
+            play_game (next_turn (make_player_lie b))
+        end
     | Tax -> 
       print_endline (current_player_id b ^ " tries to take tax. \n");
       if(player_challenge b "Tax" (current_player_id b)"") then
@@ -275,6 +297,17 @@ let rec play_game b =
       print_string "\n> ";
       play_game b
     | Foreign_Aid -> let new_b = foreign_aid (current_player_id b) b in
+      let ai_blocker =should_any_block non_cur_players b "Foreign Aid" host_id in
+      if(fst ai_blocker) then
+        begin
+          let blocker= snd ai_blocker in
+          print_endline (blocker^ "blocked "^curr_id^"'s foreign aid."); 
+          if (can_block blocker "Steal" b) then 
+            play_game (next_turn b)
+          else 
+            play_game (next_turn (make_player_lie b))
+        end
+      else
       if new_b != Illegal then
         let legal_item = extract_legal (new_b) in
         print_endline (current_player_id b ^ " takes foreign aid. \n");
@@ -287,20 +320,31 @@ let rec play_game b =
 
     |Steal killed_id -> let killed_id = List.hd killed_id in
       if(check_id killed_id b) then
-        let new_b= steal (current_player_id b) killed_id b in
-        if(new_b!= Illegal && new_b != NoMoney) then
-          let legal_item = extract_legal new_b in
-          print_endline (current_player_id b ^ " steals from "^killed_id);
-          print_string "\n ";
-          (play_game(next_turn legal_item))
-        else if (new_b = Illegal) then
-          (print_endline "That's not a valid command to steal try again \n";
-           print_string "\n> ";
-           play_game b)
-        else 
-          (print_endline "You cannot steal from someone with no money \n";
-           print_string "\n> ";
-           play_game b)
+        let ai_blocker =should_any_block non_cur_players b "Steal" killed_id in
+        if(fst ai_blocker) then
+          begin
+            let blocker= snd ai_blocker in
+            print_endline (blocker^ "blocked "^curr_id^"'s steal."); 
+            if (can_block blocker "Steal" b) then 
+              play_game (next_turn b)
+            else 
+              play_game (next_turn (make_player_lie b))
+          end
+        else
+          let new_b= steal (current_player_id b) killed_id b in
+          if(new_b!= Illegal && new_b != NoMoney) then
+            let legal_item = extract_legal new_b in
+            print_endline (current_player_id b ^ " steals from "^killed_id);
+            print_string "\n ";
+            (play_game(next_turn legal_item))
+          else if (new_b = Illegal) then
+            (print_endline "That's not a valid command to steal try again \n";
+             print_string "\n> ";
+             play_game b)
+          else 
+            (print_endline "You cannot steal from someone with no money \n";
+             print_string "\n> ";
+             play_game b)
       else
         (print_endline "That isn't a player";
          print_string "\n> ";
