@@ -94,6 +94,9 @@ let turn_info player bd=
 (** [is_ai player] is true if [player] is an ai.*)
 let is_ai player= player.ai
 
+(** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
+let id_is_ai id b= is_ai (find_player id b)
+
 let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
   (*call a function that deals a card twice, and return a tuple with a card tuple
     and a deck *)

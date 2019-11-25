@@ -43,6 +43,22 @@ let choose_two cards can_get_both=
   else 
     ((card1, card1), new_cards)
 
+(** [challenge_block blocker challenger action b] is [b] after [challenger]'s 
+    challenge against [blocker]'s block of [action] paired with whether the 
+    challenge was successful. [challenge_block] only resolves whether or not the
+    challenge is successful and the resultant turnover of a card, not the 
+    results of the challenged action.*)
+let challenge_block blocker challenger action b=
+  if(can_block blocker action b) then
+    let card_choice= if(id_is_ai challenger b) then Deck.get_name (Board.find_facedown challenger b) else choose_card b challenger in
+    print_endline(challenger^" unsuccessfully challenged "^blocker^"'s "^action^" block.");
+    (turnover_card challenger b card_choice,false)
+  else
+    let card_choice= if(id_is_ai blocker b) then Deck.get_name (Board.find_facedown blocker b) else choose_card b blocker in
+    print_endline(challenger^" successfully challenged "^blocker^"'s "^action^ " block.");
+    (turnover_card blocker b card_choice,true)
+
+
 
 (** [player_challenge b action actor] is whether the player decides to challenge
     [actor]'s choice to perform [action] in [bd].*)
@@ -118,6 +134,7 @@ let rec play_game b =
               play_game (next_turn (make_player_lie b))
           end
     |Steal killed_id ->
+      let ai_challenger= should_any_challenge non_cur_players b "Steal" killed_id in
       print_endline (current_player_id b ^ " tries to steal from "^killed_id);
       if (player_block b "Steal" (current_player_id b)) then 
         (print_endline "You blocked the action."; 
@@ -148,7 +165,7 @@ let rec play_game b =
               print_string("You were right! "^curr_id^" turns over their "^card_choice ^ "\n");
               let turnover= turnover_card curr_id b card_choice in
               play_game (next_turn turnover)
-          else
+          else if (not(fst ai_challenger)) then
             let new_b= steal (current_player_id b) killed_id b in
             if(new_b!= Illegal) then
               let legal_item = extract_legal new_b in
@@ -159,6 +176,26 @@ let rec play_game b =
               (print_endline "That's not a valid command to steal try again \n";
                print_string "\n> ";
                play_game b)
+          else
+            let challenger_id= snd ai_challenger in 
+            if(can_act curr_id "Steal" b) then
+              let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+              print_endline (challenger_id^" challenged "^curr_id^"'s steal unsuccessfully, they turned over their "^card_choice);
+              let new_b= steal (current_player_id b) killed_id b in
+              if(new_b!= Illegal) then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " steals from "^killed_id);
+                print_string "\n ";
+                (play_game(next_turn legal_item))
+              else
+                (print_endline "That's not a valid command to steal try again \n";
+                 print_string "\n> ";
+                 play_game b)
+            else
+              (print_endline (challenger_id^"successfully challenged"^curr_id^"'s steal");
+               let card_choice = choose_card b curr_id in
+               play_game (next_turn (turnover_card curr_id b card_choice)))
+
         else begin
           let blocker= snd ai_blocker in
           print_endline (blocker^ "blocked the steal."); 
@@ -169,6 +206,7 @@ let rec play_game b =
         end
     | Tax -> 
       print_endline (current_player_id b ^ " tries to take tax. \n");
+      let ai_challenger= should_any_challenge non_cur_players b "Tax" "" in
       if(player_challenge b "Tax" (current_player_id b)"") then
         if(can_act curr_id "Tax" b) then
           let card_choice = choose_card b host_id in
@@ -188,6 +226,26 @@ let rec play_game b =
           print_string("You were right! "^curr_id^" turns over their "^card_choice^"\n");
           let turnover= turnover_card curr_id b card_choice in
           play_game (next_turn turnover)
+      else 
+      if(fst ai_challenger) then
+        if(can_act curr_id "Tax" b) then
+          let challenger_id= snd ai_challenger in
+          let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+          print_endline (challenger_id^" turns over their "^card_choice^" after failing to challenge "^curr_id);
+          let new_b = tax (current_player_id b) (turnover_card curr_id b card_choice) in
+          if new_b != Illegal then 
+            let legal_item = extract_legal (new_b) in
+            print_endline (current_player_id b ^ " takes tax. \n");
+            print_string "\n> ";
+            play_game (next_turn legal_item)
+          else
+            (print_endline "That's not a valid command to take tax try again\n";
+             print_string "\n> ";
+             play_game b;)
+        else
+          let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
+          print_string((snd ai_challenger) ^"was right! "^curr_id^" turns over their "^card_choice^ "\n");
+          play_game (next_turn (turnover_card curr_id b card_choice))
       else
         let new_b = tax (current_player_id b) b in
         if new_b != Illegal then 
@@ -200,6 +258,7 @@ let rec play_game b =
            print_string "\n> ";
            play_game b;)
     |Assassinate killed_id ->
+      let ai_challenger= should_any_challenge non_cur_players b "Assassinate" killed_id in
       print_endline (current_player_id b ^ " tries to assassinate "^killed_id);
       if (player_block b "Assassinate" (current_player_id b)) then 
         (print_endline "You blocked the action."; 
@@ -228,7 +287,7 @@ let rec play_game b =
             let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
             print_string("You were right! "^curr_id^" turns over their "^card_choice^ "\n");
             play_game (next_turn (turnover_card curr_id b card_choice))
-        else
+        else if(not (fst ai_challenger)) then
           let card= if(killed_id=host_id) then choose_card b host_id else Deck.get_name (Board.find_facedown killed_id b) in
           let new_b= assassinate (current_player_id b) killed_id b card in 
           if new_b != Illegal then
@@ -238,6 +297,24 @@ let rec play_game b =
             play_game (next_turn legal_item) 
           else 
             play_game b
+        else 
+          let challenger_id= snd ai_challenger in 
+          if(can_act curr_id "Assassinate" b) then
+            let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+            print_endline (challenger_id^" challenged "^curr_id^"'s assassination unsuccessfully, they turned over their "^card_choice);
+            let card= Deck.get_name (Board.find_facedown killed_id b) in
+            let new_b= assassinate (current_player_id b) killed_id b card in 
+            if new_b != Illegal then
+              let legal_item = extract_legal new_b in
+              print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+              print_string "\n> ";
+              play_game (next_turn legal_item) 
+            else 
+              play_game b
+          else
+            (print_endline (challenger_id^"successfully challenged"^curr_id^"'s assassination");
+             let card_choice = choose_card b curr_id in
+             play_game (next_turn (turnover_card curr_id b card_choice)))
       else
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to assassinate";
@@ -268,20 +345,46 @@ let rec play_game b =
   try match parse (read_line ()) with
     | Quit -> exit 0
     | Exchange -> begin
-        let both= has_both curr_id b in
-        let cards= view_four curr_id b in
-        let choice_info = choose_two (fst cards) both in
-        let discards= snd choice_info in
-        let chosen= fst choice_info in
-        let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards) discards in
-        if new_b != Illegal then
-          let legal_item = extract_legal (new_b) in
-          print_endline (current_player_id b ^ " exchanges with the court deck. \n");
-          print_string "\n> ";
-          play_game (next_turn legal_item)
-        else 
-          (* Only needed for syntatic reasons*)
-          play_game b
+        let challenger = should_any_challenge non_cur_players b "Exchange" "" in
+        if(fst challenger) then
+          let challenger_id= snd challenger in
+          if(can_act curr_id "Exchange" b) then
+            let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+            print_endline (challenger_id^" challenged your exchange unsuccessfully, they turned over their "^card_choice);
+            let new_st= turnover_card challenger_id b card_choice in
+            let both= has_both curr_id b in
+            let cards= view_four curr_id b in
+            let choice_info = choose_two (fst cards) both in
+            let discards= snd choice_info in
+            let chosen= fst choice_info in
+            let new_b = exchange curr_id new_st (fst chosen) (snd chosen) (snd cards) discards in
+            if new_b != Illegal then
+              let legal_item = extract_legal (new_b) in
+              print_endline (current_player_id b ^ " exchanges with the court deck. \n");
+              print_string "\n> ";
+              play_game (next_turn legal_item)
+            else 
+              (* Only needed for syntatic reasons*)
+              play_game b
+          else
+            (print_endline (challenger_id^"successfully challenged your Tax");
+             let card_choice = choose_card b curr_id in
+             play_game (next_turn (turnover_card curr_id b card_choice)))
+        else
+          let both= has_both curr_id b in
+          let cards= view_four curr_id b in
+          let choice_info = choose_two (fst cards) both in
+          let discards= snd choice_info in
+          let chosen= fst choice_info in
+          let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards) discards in
+          if new_b != Illegal then
+            let legal_item = extract_legal (new_b) in
+            print_endline (current_player_id b ^ " exchanges with the court deck. \n");
+            print_string "\n> ";
+            play_game (next_turn legal_item)
+          else 
+            (* Only needed for syntatic reasons*)
+            play_game b
 
       end
     | Income -> let new_b = income (current_player_id b) b in 
@@ -319,6 +422,7 @@ let rec play_game b =
          play_game b)
 
     |Steal killed_id -> let killed_id = List.hd killed_id in
+      let challenger= should_any_challenge non_cur_players b "Steal" killed_id in
       if(check_id killed_id b) then
         let ai_blocker =should_any_block non_cur_players b "Steal" killed_id in
         if(fst ai_blocker) then
@@ -330,7 +434,7 @@ let rec play_game b =
             else 
               play_game (next_turn (make_player_lie b))
           end
-        else
+        else if(not(fst challenger)) then
           let new_b= steal (current_player_id b) killed_id b in
           if(new_b!= Illegal && new_b != NoMoney) then
             let legal_item = extract_legal new_b in
@@ -345,21 +449,50 @@ let rec play_game b =
             (print_endline "You cannot steal from someone with no money \n";
              print_string "\n> ";
              play_game b)
+        else
+          let challenger_id= snd challenger in 
+          if(can_act curr_id "Steal" b) then
+            let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+            print_endline (challenger_id^" challenged your Steal unsuccessfully, they turned over their "^card_choice);
+            let new_b = extract_legal (steal (current_player_id b) killed_id b) in
+            play_game (turnover_card challenger_id new_b card_choice)
+          else
+            (print_endline (challenger_id^"successfully challenged your Steal");
+             let card_choice = choose_card b curr_id in
+             play_game (next_turn (turnover_card curr_id b card_choice)))
+
       else
         (print_endline "That isn't a player";
          print_string "\n> ";
          play_game b)
-    | Tax -> let new_b = tax (current_player_id b) b in
-      if new_b != Illegal then 
-        let legal_item = extract_legal (new_b) in
-        print_endline (current_player_id b ^ " takes tax. \n");
-        print_string "\n> ";
-        play_game (next_turn legal_item)
+    | Tax -> 
+      let challenger= should_any_challenge non_cur_players b "Tax" "" in
+      if(not (fst challenger)) then
+        let new_b = tax (current_player_id b) b in
+        if new_b != Illegal then 
+          let legal_item = extract_legal (new_b) in
+          print_endline (current_player_id b ^ " takes tax. \n");
+          print_string "\n> ";
+          play_game (next_turn legal_item)
+        else
+          (print_endline "That's not a valid command to take tax try again\n";
+           print_string "\n> ";
+           play_game b;)
       else
-        (print_endline "That's not a valid command to take tax try again\n";
-         print_string "\n> ";
-         play_game b;)
+        let challenger_id= snd challenger in 
+        if(can_act curr_id "Tax" b) then
+          let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+          print_endline (challenger_id^" challenged your Tax unsuccessfully, they turned over their "^card_choice);
+          let new_b = extract_legal (tax (current_player_id b) b) in
+          play_game (turnover_card challenger_id new_b card_choice)
+        else
+          (print_endline (challenger_id^"successfully challenged your Tax");
+           let card_choice = choose_card b curr_id in
+           play_game (next_turn (turnover_card curr_id b card_choice)))
+
+
     |Assassinate killed_id -> let killed_id = List.hd killed_id in
+      let challenger= should_any_challenge non_cur_players b "Assassinate" killed_id in
       if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then
         if(should_block killed_id b "Assassinate" killed_id) then
           begin
@@ -369,7 +502,7 @@ let rec play_game b =
             else 
               play_game (next_turn (make_player_lie b))
           end
-        else 
+        else if(not(fst challenger)) then
           let card= Deck.get_name (Board.find_facedown killed_id b) in
           let new_b= assassinate (current_player_id b) killed_id b card in 
           if new_b != Illegal then
@@ -379,6 +512,24 @@ let rec play_game b =
             play_game (next_turn legal_item) 
           else 
             play_game b
+        else
+          let challenger_id= snd challenger in 
+          if(can_act curr_id "Assassinate" b) then
+            let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
+            print_endline (challenger_id^" challenged your assassination unsuccessfully, they turned over their "^card_choice);
+            let card= Deck.get_name (Board.find_facedown killed_id b) in
+            let new_b= assassinate (current_player_id b) killed_id b card in 
+            if new_b != Illegal then
+              let legal_item = extract_legal new_b in
+              print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+              print_string "\n> ";
+              play_game (next_turn legal_item) 
+            else 
+              play_game b
+          else
+            (print_endline (challenger_id^"successfully challenged your assassination");
+             let card_choice = choose_card b curr_id in
+             play_game (next_turn (turnover_card curr_id b card_choice)))
       else
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to assassinate";

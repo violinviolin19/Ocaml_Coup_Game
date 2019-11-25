@@ -98,7 +98,7 @@ let should_challenge ai_id action target bd=
   Random.self_init ();
   if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) then false else
   if(action="Assassinate "^ai.id) then true else
-  if(Random.int(1)=1) then true else false
+  if(random_elt random_nums = 0) then true else false
 
 let can_block_steal card_list =
   let cards= List.map (Deck.get_name) card_list in
