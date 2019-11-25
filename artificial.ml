@@ -135,3 +135,18 @@ let should_any_challenge ids bd action target=
     |[]->(false, target)
     |h::t-> if(should_challenge h action target bd) then (true,h) else challenges t in
   challenges ids
+
+let should_challenge_block id action actor bd=
+  Random.self_init ();
+  match String.capitalize_ascii action with
+  |"Steal"
+  |"Assassinate"
+  |"Foreign Aid"-> if(actor=id) then true else false
+  |_-> failwith "Not a blockable action"
+
+
+let any_challenge_block ids bd action actor=
+  let rec blocks = function
+    |[]->(false,actor)
+    |h::t -> if(should_challenge_block h action actor bd) then (true,h) else blocks t in
+  blocks ids

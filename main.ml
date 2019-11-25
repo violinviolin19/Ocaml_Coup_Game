@@ -80,12 +80,20 @@ let rec player_block b action actor =
   | _ -> failwith "unimplemented"
 
 
+let rec player_challenge_block action actor =
+  print_endline("Would you like to challenge "^actor^"'s block of "^action);
+  match String.trim (String.lowercase_ascii (read_line())) with
+  |"yes"->true
+  |"no"->false
+  |_->print_endline("Invalid choice, try again."); player_challenge_block action actor
+
 let rec play_game b = 
   let curr_player = current_player b in
   let cards_list = get_cards (current_player_id b) b in 
   let curr_id= current_player_id b in
   let host_id = get_player_id (get_host b) in
   let non_cur_players= List.filter (fun x -> x<>host_id) (List.filter (fun x -> x<>curr_id) (player_names b)) in 
+  let non_host_players= List.filter ( fun x -> x<>host_id) (player_names b) in
   if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
   else 
@@ -107,7 +115,26 @@ let rec play_game b =
     |ForeignAid -> let new_b = foreign_aid (current_player_id b) b in
       print_endline (current_player_id b ^ " tries to take foreign aid");
       if (player_block b "Foreign Aid" (current_player_id b)) then 
-        (print_endline "You blocked the action."; 
+        (print_endline "You blocked the action.";
+         let challenger= any_challenge_block non_host_players b "Foreign Aid" curr_id in
+         if(fst challenger) then
+           let challenger_id = snd challenger in
+           let challenge_st = challenge_block host_id challenger_id "Foreign Aid" b in
+           if(snd challenge_st) then
+             let new_b = foreign_aid (current_player_id b) (fst challenge_st) in
+             if new_b != Illegal then
+               let legal_item = extract_legal (new_b) in
+               print_endline (current_player_id b ^ " takes foreign aid. \n");
+               print_string "\n> ";
+               play_game (next_turn legal_item)
+             else 
+               (print_endline "That's not a valid command to take foreign aid try again.\n";
+                print_string "\n> ";
+                play_game b)
+           else
+             play_game (next_turn (fst challenge_st))
+
+         else
          if (can_block host_id "Foreign Aid" b) then 
            play_game (next_turn b)
          else 
@@ -259,13 +286,40 @@ let rec play_game b =
            play_game b;)
     |Assassinate killed_id ->
       let ai_challenger= should_any_challenge non_cur_players b "Assassinate" killed_id in
+      let ai_blocker= should_any_block non_cur_players b "Assassinate" killed_id in
+      let block_challenge= any_challenge_block non_host_players b "Assassinate" curr_id in
       print_endline (current_player_id b ^ " tries to assassinate "^killed_id);
-      if (player_block b "Assassinate" (current_player_id b)) then 
-        (print_endline "You blocked the action."; 
-         if (can_block killed_id "Assassinate" b) then 
-           play_game (next_turn b)
-         else 
-           play_game (next_turn (make_player_lie b)))
+      let player_block= player_block b "Assassinate" (current_player_id b)||fst ai_blocker in
+      let blocker= if(player_block||fst ai_blocker) then (if player_block then (true,host_id) else (true,snd ai_blocker)) else (false,host_id) in
+      let blocker_id= snd blocker in
+      if (fst blocker) then 
+        let challenger= if(blocker_id=host_id) then block_challenge else (player_challenge_block "Assassinate" blocker_id, host_id) in
+        let challenger= if(fst challenger= false) then block_challenge else challenger in
+        if(fst challenger) then
+          let challenge_st= challenge_block blocker_id (snd challenger) "Assassinate" b in
+          let board= fst challenge_st in
+          if(snd challenge_st) then
+            let card= if(killed_id=host_id) then choose_card board host_id else Deck.get_name (Board.find_facedown killed_id board) in
+            let new_b= assassinate (current_player_id b) killed_id board card in 
+            if new_b != Illegal then
+              let legal_item = extract_legal new_b in
+              print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+              print_string "\n> ";
+              play_game (next_turn legal_item) 
+            else 
+              play_game board
+          else
+            (print_endline (killed_id^" blocked the assassination."); 
+             if (can_block killed_id "Assassinate" b) then 
+               play_game (next_turn board)
+             else 
+               play_game (next_turn (make_player_lie board)))
+        else
+          (print_endline (killed_id^" blocked the assassination."); 
+           if (can_block killed_id "Assassinate" b) then 
+             play_game (next_turn b)
+           else 
+             play_game (next_turn (make_player_lie b)))
       else
       if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
         if(player_challenge b "Assassinate" (current_player_id b) killed_id) then
@@ -401,15 +455,34 @@ let rec play_game b =
       play_game b
     | Foreign_Aid -> let new_b = foreign_aid (current_player_id b) b in
       let ai_blocker =should_any_block non_cur_players b "Foreign Aid" host_id in
+      let blocker_id= snd ai_blocker in
+      let block_challenger= any_challenge_block non_cur_players b "Foreign Aid" host_id in
       if(fst ai_blocker) then
-        begin
-          let blocker= snd ai_blocker in
-          print_endline (blocker^ "blocked "^curr_id^"'s foreign aid."); 
-          if (can_block blocker "Steal" b) then 
-            play_game (next_turn b)
+        let player_challenge= begin 
+          if(not(fst block_challenger)) then player_challenge_block "Foreign Aid" blocker_id 
+          else false 
+        end in
+        if(not player_challenge &&not(fst block_challenger)&&snd block_challenger <> snd ai_blocker) then
+          begin
+            print_endline (blocker_id^ "blocked "^curr_id^"'s foreign aid."); 
+            if (can_block blocker_id "Steal" b) then 
+              play_game (next_turn b)
+            else 
+              play_game (next_turn (make_player_lie b))
+          end
+        else
+          let challenger= if(player_challenge) then host_id else (snd(block_challenger)) in
+          let challenge= challenge_block blocker_id (challenger) "Foreign Aid" b in
+          if(snd challenge) then play_game (next_turn (fst(challenge))) 
+          else if new_b != Illegal then
+            let legal_item = extract_legal (new_b) in
+            print_endline (current_player_id b ^ " takes foreign aid. \n");
+            print_string "\n> ";
+            play_game (next_turn legal_item)
           else 
-            play_game (next_turn (make_player_lie b))
-        end
+            (print_endline "That's not a valid command to take foreign aid try again.\n";
+             print_string "\n> ";
+             play_game b)
       else
       if new_b != Illegal then
         let legal_item = extract_legal (new_b) in
@@ -496,7 +569,28 @@ let rec play_game b =
       if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then
         if(should_block killed_id b "Assassinate" killed_id) then
           begin
-            print_endline (killed_id^ "blocked your assassination."); 
+            print_endline (killed_id^ "blocked your assassination.");
+            let host_chal= player_challenge_block "Assassinate" killed_id in
+            let challenger= if(host_chal) then (true,host_id) else challenger in
+            if(fst challenger) then
+              let challenge_st= challenge_block killed_id (snd challenger) "Assassinate" b in 
+              let new_b= fst challenge_st in
+              if(snd challenge_st) then
+                let card= Deck.get_name (Board.find_facedown killed_id new_b) in
+                let new_b= assassinate (current_player_id b) killed_id new_b card in 
+                if new_b != Illegal then
+                  let legal_item = extract_legal new_b in
+                  print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
+                  print_string "\n> ";
+                  play_game (next_turn legal_item) 
+                else 
+                  play_game b
+              else
+                (if (can_block killed_id "Assassination" b) then 
+                   play_game (next_turn new_b)
+                 else 
+                   play_game (next_turn (make_player_lie new_b)))
+            else
             if (can_block killed_id "Assassination" b) then 
               play_game (next_turn b)
             else 
