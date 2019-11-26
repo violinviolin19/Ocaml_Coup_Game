@@ -350,8 +350,6 @@ let can_block actor_name action_name bd =
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
 
-let shuffle_deck b = 
-  {b with current_deck = Deck.shuffle(b.current_deck)}
 
 (* ---------------- Block commands begin here ----------------- *)
 
