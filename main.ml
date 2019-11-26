@@ -3,6 +3,7 @@ open Deck
 open Board
 open Artificial
 
+exception SelfTarget
 (** [choose_card bd] is the facedown card of [player] that they choose in [bd] *)
 let rec choose_card bd player : string=
   let cards= cards player bd in
@@ -290,6 +291,9 @@ let rec play_game b =
 
     |Steal killed_id -> let killed_id = List.hd killed_id in
       if(check_id killed_id b) then
+        if killed_id = current_player_id b then
+          raise SelfTarget
+        else
         let new_b= steal (current_player_id b) killed_id b in
         if(new_b!= Illegal && new_b != NoMoney) then
           let legal_item = extract_legal new_b in
@@ -319,7 +323,9 @@ let rec play_game b =
          print_string "\n> ";
          play_game b;)
     |Assassinate killed_id -> let killed_id = List.hd killed_id in
-      if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
+      if killed_id = current_player_id b then
+        raise SelfTarget
+      else if(check_id killed_id b&&check_bank (current_player_id b) 3 b) then 
         let card= Deck.get_name (Board.find_facedown killed_id b) in
         let new_b= assassinate (current_player_id b) killed_id b card in 
         if new_b != Illegal then
@@ -370,6 +376,9 @@ let rec play_game b =
   | Malformed -> print_endline "That wasn't understandable, try again.\n";
     print_string "\n> ";
     play_game b 
+  | SelfTarget -> print_endline "You can't target yourself, try again.\n"; 
+  print_string "\n> ";
+  play_game b 
 
 
 
@@ -377,7 +386,7 @@ let rec play_game b =
 let main ()=
   ANSITerminal.(print_string [blue]
                   "\n\nWelcome to Ocaml Coup!\n");
-  print_endline "Press any key to Start\n";
+  print_endline "Press enter to Start\n";
   print_string  "> ";
   let deck = init_deck ""in 
   let board = init_board deck 2 in

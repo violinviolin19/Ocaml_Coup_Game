@@ -22,7 +22,7 @@ type t = {
 }
 
 
-type result = Legal of t | Illegal | NoMoney
+type result = Legal of t | Illegal | NoMoney | MoneyOverflow
 
 let player_names bd=
   List.map (fun x->x.id) bd.current_players
@@ -191,9 +191,16 @@ let change_money player_name bd cash=
 let steal stealer_id stolen_id bd=
   try
     (let stolen_player = (find_player stolen_id bd) in
-    if stolen_player.money >= 2 then
-      let stealer_given = change_money stealer_id bd 2 in
-      Legal (change_money stolen_id stealer_given (-2))
+    let stealer_player = (find_player stolen_id bd) in
+    if stealer_player.money  >= 10 then
+      MoneyOverflow
+    else if stolen_player.money >= 2 then
+      if stealer_player.money + 2 <= 10 then
+        let stealer_given = change_money stealer_id bd 2 in
+        Legal (change_money stolen_id stealer_given (-2))
+      else 
+        let stealer_given = change_money stealer_id bd (max (10-stealer_player.money) 0) in
+        Legal (change_money stolen_id stealer_given (-min stolen_player.money 2))
     else if stolen_player.money = 1 then
       let stealer_given = change_money stealer_id bd stolen_player.money in
       Legal (change_money stolen_id stealer_given (-stolen_player.money))
