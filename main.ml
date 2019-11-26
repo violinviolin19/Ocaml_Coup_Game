@@ -164,13 +164,37 @@ let rec play_game b =
       let ai_challenger= should_any_challenge non_cur_players b "Steal" killed_id in
       print_endline (current_player_id b ^ " tries to steal from "^killed_id);
       if (player_block b "Steal" (current_player_id b)) then 
-        (print_endline "You blocked the action."; 
-         if (can_block killed_id "Steal" b) then 
-           play_game (next_turn b)
-         else 
-           play_game (next_turn (make_player_lie b)))
+        let block_challenger= any_challenge_block non_host_players b "Steal" curr_id in
+        if(fst block_challenger) then
+          let challenger= snd block_challenger in
+          let challenge_st = challenge_block host_id challenger "Steal" b in
+          let new_b= fst challenge_st in
+          if(snd challenge_st) then
+            let new_b= steal (current_player_id new_b) killed_id new_b in
+            if(new_b!= Illegal) then
+              let legal_item = extract_legal new_b in
+              print_endline (current_player_id b ^ " steals from "^killed_id);
+              print_string "\n ";
+              (play_game(next_turn legal_item))
+            else
+              (print_endline "That's not a valid command to steal try again \n";
+               print_string "\n> ";
+               play_game b)
+          else
+            (print_endline "You blocked the action."; 
+             if (can_block killed_id "Steal" b) then 
+               play_game (next_turn new_b)
+             else 
+               play_game (next_turn (make_player_lie new_b)))
+        else
+          (print_endline "You blocked the action."; 
+           if (can_block killed_id "Steal" b) then 
+             play_game (next_turn b)
+           else 
+             play_game (next_turn (make_player_lie b)))
       else
         let ai_blocker = should_any_block non_cur_players b "Steal" killed_id in
+        let block_challenger= any_challenge_block non_cur_players b "Steal" curr_id in
         if(not (fst ai_blocker)) then
           if(player_challenge b "Steal" (current_player_id b) killed_id) then
             if(can_act curr_id "Steal" b) then
@@ -222,14 +246,33 @@ let rec play_game b =
               (print_endline (challenger_id^"successfully challenged"^curr_id^"'s steal");
                let card_choice = choose_card b curr_id in
                play_game (next_turn (turnover_card curr_id b card_choice)))
-
         else begin
           let blocker= snd ai_blocker in
-          print_endline (blocker^ "blocked the steal."); 
-          if (can_block blocker "Steal" b) then 
-            play_game (next_turn b)
-          else 
-            play_game (next_turn (make_player_lie b))
+          if(fst block_challenger) then
+            let challenge_st= challenge_block blocker (snd block_challenger) "Steal" b in
+            let new_b= fst challenge_st in
+            if(snd challenge_st) then
+              let new_b= steal (current_player_id new_b) killed_id new_b in
+              if(new_b!= Illegal) then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " steals from "^killed_id);
+                print_string "\n ";
+                (play_game(next_turn legal_item))
+              else
+                (print_endline "That's not a valid command to steal try again \n";
+                 print_string "\n> ";
+                 play_game b)
+            else
+              (if (can_block blocker "Steal" b) then 
+                 play_game (next_turn new_b)
+               else 
+                 play_game (next_turn (make_player_lie new_b)))
+          else
+            (print_endline (blocker^ "blocked the steal."); 
+             if (can_block blocker "Steal" b) then 
+               play_game (next_turn b)
+             else 
+               play_game (next_turn (make_player_lie b)))
         end
     | Tax -> 
       print_endline (current_player_id b ^ " tries to take tax. \n");
@@ -498,14 +541,41 @@ let rec play_game b =
       let challenger= should_any_challenge non_cur_players b "Steal" killed_id in
       if(check_id killed_id b) then
         let ai_blocker =should_any_block non_cur_players b "Steal" killed_id in
+        let ai_challenger= any_challenge_block non_cur_players b "Steal" host_id in
         if(fst ai_blocker) then
           begin
             let blocker= snd ai_blocker in
-            print_endline (blocker^ "blocked "^curr_id^"'s steal."); 
-            if (can_block blocker "Steal" b) then 
-              play_game (next_turn b)
-            else 
-              play_game (next_turn (make_player_lie b))
+            let player_chal= player_challenge_block "Steal" blocker in
+            let block_challenger= if(player_chal) then (true, host_id) else ai_challenger in
+            if(fst block_challenger) then
+              let challenger_st= challenge_block blocker (snd block_challenger) "Steal" b in
+              let new_b= fst challenger_st in
+              if(snd challenger_st) then
+                let new_b= steal (current_player_id new_b) killed_id new_b in
+                if(new_b!= Illegal && new_b != NoMoney) then
+                  let legal_item = extract_legal new_b in
+                  print_endline (current_player_id b ^ " steals from "^killed_id);
+                  print_string "\n ";
+                  (play_game(next_turn legal_item))
+                else if (new_b = Illegal) then
+                  (print_endline "That's not a valid command to steal try again \n";
+                   print_string "\n> ";
+                   play_game b)
+                else 
+                  (print_endline "You cannot steal from someone with no money \n";
+                   print_string "\n> ";
+                   play_game b)
+              else
+                (if (can_block blocker "Steal" b) then 
+                   play_game (next_turn new_b)
+                 else 
+                   play_game (next_turn (make_player_lie new_b)))
+            else
+              (print_endline (blocker^ "blocked "^curr_id^"'s steal."); 
+               if (can_block blocker "Steal" b) then 
+                 play_game (next_turn b)
+               else 
+                 play_game (next_turn (make_player_lie b)))
           end
         else if(not(fst challenger)) then
           let new_b= steal (current_player_id b) killed_id b in
@@ -570,6 +640,7 @@ let rec play_game b =
         if(should_block killed_id b "Assassinate" killed_id) then
           begin
             print_endline (killed_id^ "blocked your assassination.");
+            let challenger= any_challenge_block non_cur_players b "Assassinate" killed_id in
             let host_chal= player_challenge_block "Assassinate" killed_id in
             let challenger= if(host_chal) then (true,host_id) else challenger in
             if(fst challenger) then

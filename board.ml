@@ -344,7 +344,8 @@ let can_act actor_name action_name bd =
 
 let can_block actor_name action_name bd =
   let actor_cards= get_cards actor_name bd in
-  let actions= List.map Deck.get_blocks actor_cards in
+  let facedown_cards= List.filter Deck.is_facedown actor_cards in
+  let actions= List.map Deck.get_blocks facedown_cards in
   match action_name with
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
