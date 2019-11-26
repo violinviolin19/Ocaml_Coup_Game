@@ -416,8 +416,7 @@ let rec play_game b =
               let legal_item = extract_legal (new_b) in
               print_endline (current_player_id b ^ " exchanges with the court deck. \n");
               print_string "\n> ";
-              let new_legal_item = shuffle_deck legal_item in 
-              play_game (next_turn new_legal_item)
+              play_game (next_turn legal_item)
             else 
               (* Only needed for syntatic reasons*)
               play_game b
@@ -625,6 +624,25 @@ let rec play_game b =
             (print_endline (challenger_id^"successfully challenged your assassination");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
+<<<<<<< HEAD
+=======
+      else
+        (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
+         else print_endline "Not enough coins to assassinate";
+         print_string "\n> ";
+         play_game b)
+    |Coup killed_id -> let killed_id = List.hd killed_id in
+      if(check_id killed_id b&&check_bank (current_player_id b) 7 b) then 
+        let card= Deck.get_name (Board.find_facedown killed_id b) in
+        let new_b= coup (current_player_id b) killed_id b card in 
+        if new_b != Illegal then
+          let legal_item = extract_legal new_b in
+          print_endline (current_player_id b ^ " coups "^killed_id^"'s "^card);
+          print_string "\n> ";
+          play_game (next_turn legal_item) 
+        else 
+          play_game b
+>>>>>>> parent of f04ec67... fixed some bugs
       else
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to assassinate";
