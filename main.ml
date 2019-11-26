@@ -417,7 +417,8 @@ let rec play_game b =
               print_endline (current_player_id b ^ " exchanges with the court deck. \n");
               print_string "\n> ";
               let new_legal_item = shuffle_deck legal_item in 
-              play_game (next_turn new_legal_item)
+
+              play_game (next_turn legal_item)
             else 
               (* Only needed for syntatic reasons*)
               play_game b
@@ -603,21 +604,17 @@ let rec play_game b =
                      play_game (next_turn (make_player_lie new_b)))
               else
               if (can_block killed_id "Assassination" b) then 
-                play_game (next_turn b)
+                i              play_game (next_turn b)
               else 
-                play_game (next_turn (make_player_lie b))
-            end
-          else if(not(fst challenger)) then
-            let card= Deck.get_name (Board.find_facedown killed_id b) in
-            let new_b= assassinate (current_player_id b) killed_id b card in 
-            if new_b != Illegal then
-              let legal_item = extract_legal new_b in
-              print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
-              print_string "\n> ";
-              play_game (next_turn legal_item) 
+                play_game rnext_turn (mnke_paayer_dib) k)lled_id b card in 
+ind
+  e   lif(not(fst challenger)) thenl new_b in
+letrcnrd= Deck.getunren (Boayd.fidd_fac"down killedeid b) in
+            lep new_b= assassi>ate
+curr            )  play_game (next_turn legal_item) 
             else 
               play_game b
-          else
+            se
             let challenger_id= snd challenger in 
             if(can_act curr_id "Assassinate" b) then
               let card_choice= Deck.get_name (Board.find_facedown challenger_id b) in
@@ -629,21 +626,21 @@ let rec play_game b =
                 print_endline (current_player_id b ^ " assassinates "^killed_id^"'s "^card);
                 print_string "\n> ";
                 play_game (next_turn legal_item) 
-              else 
+                se 
                 play_game b
-            else
-              (print_endline (challenger_id^"successfully challenged your assassination");
+
+                rint_endline (challenger_id^"successfully challenged your assassination");
                let card_choice = choose_card b curr_id in
-               play_game (next_turn (turnover_card curr_id b card_choice)))
-        else
-          (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
-           else print_endline "Not enough coins to assassinate";
-           print_string "\n> ";
+                lay_game (next_turn (turnover_card curr_id b card_choice)))
+            se
+              f(not (check_id killed_id b)) then print_endline "That isn't a player" 
+               se print_endline "Not enough coins to assassinate";
+               t_string "\n> ";
            play_game b)
-    |Coup killed_id -> let killed_id = List.hd killed_id in
-      if(check_id killed_id b&&check_bank (current_player_id b) 7 b) then 
-        let card= Deck.get_name (Board.find_facedown killed_id b) in
-        let new_b= coup (current_player_id b) killed_id b card in 
+        |Coup killed_id -> let killed_id = List.hd killed_id in
+        if(check_id killed_id b&&check_bank (current_player_id b) 7 b) then 
+          let card= Deck.get_name (Board.find_facedown killed_id b) in
+        t new_b= coup )current_player_id b) killed_id b card in 
         if new_b != Illegal then
           let legal_item = extract_legal new_b in
           print_endline (current_player_id b ^ " coups "^killed_id^"'s "^card);
@@ -651,14 +648,14 @@ let rec play_game b =
           play_game (next_turn legal_item) 
         else 
           play_game b
-      else
+        se
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to coup";
-         print_string "\n> ";
+          rint_string "\n> ";
          play_game b)
-    |Block -> (*let blocked_id = List.hd blocked_id in 
-                           let result = block b blocked_id in 
-                           if result = Illegal then (
+      | lock -> (*let blocked_id = List.hd blocked_id in 
+                             let result = block b blocked_id in 
+                             if result = Illegal then (
                            print_endline "Not a valid character that can block.";
                            print_string "\n> ";
                            play_game b)
@@ -666,27 +663,31 @@ let rec play_game b =
                            let legal_item = extract_legal result in 
                            print_endline "You blocked the last action.\n";
                            play_game (next_turn legal_item) *)
-      play_game (next_turn b)
-    | Continue -> play_game (next_turn b)
+      ay_game (next_turn b 
+    | Continue -> pla       (next_turn b)
 
-  with
-  | Empty -> print_endline "You entered nothing, try again.\n"; 
-    print_string "\n> ";
-    play_game b 
+            with
+            Empty -> print_endlin) "You entered nothing, try again.\n"; 
+  print_string "\n> ";
+e     play_game b 
   | Malformed -> print_endline "That wasn't understandable, try again.\n";
     print_string "\n> ";
     play_game b 
 
 
-
-
-let main ()=
-  ANSITerminal.(print_string [blue]
+  let main ()=
+    ANSITerminal.(print_string [blue]
                   "\n\nWelcome to Ocaml Coup!\n");
   print_endline "Press any key to Start\n";
   print_string  "> ";
   let deck = init_deck ""in 
   let board = init_board deck 2 in
+  match read_line () with
+  | _ -> play_game board (*fix later*)
+
+let () = main init_board deck 2 ()
+  match read_line () with
+  | _ -> playxatit_board deck 2 in
   match read_line () with
   | _ -> play_game board (*fix later*)
 
