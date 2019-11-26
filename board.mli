@@ -79,3 +79,5 @@ val block : t -> string -> result
 val make_player_lie : t -> t
 
 val can_block : string -> string -> t -> bool
+
+val id_is_ai : string -> t -> bool

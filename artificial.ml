@@ -4,6 +4,7 @@ type actions = Income | ForeignAid | Tax | Steal of string | Assassinate of stri
 let actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"; "Exchange"; "Coup"]
 let income_actions = ["Income"; "Foreign Aid"; "Tax"; "Steal"]
 let hostile_actions = ["Steal"; "Assassinate"]
+let random_nums = [0;1]
 let basic_actions = income_actions@hostile_actions
 
 type t= {
@@ -92,11 +93,12 @@ let action_to_string action =
   |Steal target ->"Steal "^target
   *)
 
-let should_challenge ai action=
+let should_challenge ai_id action target bd=
+  let ai= new_ai ai_id bd in
   Random.self_init ();
-  if(Board.has_both ai.id ai.board && action="Assassinate "^ai.id) then false else
+  if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) then false else
   if(action="Assassinate "^ai.id) then true else
-  if(Random.int(1)=1) then true else false
+  if(random_elt random_nums = 0) then true else false
 
 let can_block_steal card_list =
   let cards= List.map (Deck.get_name) card_list in
@@ -109,16 +111,42 @@ let can_block_assassinate card_list =
 let should_block ai_id bd action target=
   let ai= new_ai ai_id bd in
   Random.self_init ();
-  let rand_block= if(Random.int 1 = 1) then true else false in
   match String.capitalize_ascii action with
   |"Steal"-> begin
       if(target=ai_id&& can_block_steal ai.cards) then true else
-      if(target=ai_id) then rand_block else false
+      if(target=ai_id) then random_elt random_nums = 0 else false
     end
   |"Assassinate"-> begin
       if(target=ai_id && can_block_assassinate ai.cards) then true else 
       if(target=ai_id && not (Board.has_both ai_id ai.board)) then true
       else false
     end
-  |"Foreign Aid"-> rand_block
+  |"Foreign Aid"-> random_elt random_nums = 0
   |_ -> failwith "Not a blockable action"
+
+let should_any_block ids bd action target=
+  let rec blocks = function
+    |[]->(false, target)
+    |h::t -> if(should_block h bd action target) then (true, h) else blocks t in
+  blocks ids
+
+let should_any_challenge ids bd action target=
+  let rec challenges = function
+    |[]->(false, target)
+    |h::t-> if(should_challenge h action target bd) then (true,h) else challenges t in
+  challenges ids
+
+let should_challenge_block id action actor bd=
+  Random.self_init ();
+  match String.capitalize_ascii action with
+  |"Steal"
+  |"Assassinate"
+  |"Foreign Aid"-> if(actor=id) then true else false
+  |_-> failwith "Not a blockable action"
+
+
+let any_challenge_block ids bd action actor=
+  let rec blocks = function
+    |[]->(false,actor)
+    |h::t -> if(should_challenge_block h action actor bd) then (true,h) else blocks t in
+  blocks ids
