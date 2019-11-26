@@ -141,7 +141,7 @@ let should_challenge_block id action actor bd=
   match String.capitalize_ascii action with
   |"Steal"
   |"Assassinate"
-  |"Foreign Aid"-> if(actor=id) then random_elt random_nums = 0 else false
+  |"Foreign Aid"-> if(actor=id) then true else false
   |_-> failwith "Not a blockable action"
 
 
