@@ -84,7 +84,7 @@ let set_status card status=
 
 
 let name_to_card card_id =
-  match String.capitalize_ascii card_id with
+  match String.trim(String.capitalize_ascii card_id) with
   |"Duke"->Duke
   |"Assassin"->Assassin
   |"Contessa"->Contessa
