@@ -625,7 +625,10 @@ let rec play_game b =
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of f04ec67... fixed some bugs
       else
         (if(not (check_id killed_id b)) then print_endline "That isn't a player" 
          else print_endline "Not enough coins to assassinate";
