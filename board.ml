@@ -24,12 +24,17 @@ type t = {
 
 type result = Legal of t | Illegal | NoMoney
 
+(** player_names bd] is a list of the string representations(names or ids) of 
+    the players of [bd].*)
 let player_names bd=
   List.map (fun x->x.id) bd.current_players
 
+(** [check_pool bd] is the current money pool of [bd].*)
 let check_pool bd=
   bd.money_pool
 
+(** [next_turn bd] is [bd] with the current turn finished and the next player's
+    turn beginning.*)
 let next_turn bd=
   let next = if(bd.turn=(List.length bd.current_players) -1) then 0 else bd.turn+1 in
   {bd with turn= next}
@@ -42,17 +47,20 @@ let find_player player bd =
     |h::t-> check_lst t in
   check_lst bd.current_players
 
-
+(** [get_host bd] is the player with the first turn in [bd].*)
 let get_host bd=
   find_player (snd (List.hd bd.turn_order)) bd
 
+(** [current_player bd] is the player whose turn it is currently in [bd].*)
 let current_player bd=
   find_player (List.assoc bd.turn bd.turn_order) bd
 
+(** [current_player_id bd] is the id/name of the player whose turn it currently
+    is in [bd].*)
 let current_player_id bd=
   (List.assoc bd.turn bd.turn_order)
 
-
+(** [check_id player_id bd] is true if [player_id] is a player in [bd].*)
 let check_id player_id bd=
   let rec check_list = function
     |[]-> false
@@ -105,6 +113,10 @@ let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
   |_->failwith "impossible"
 
 
+(** [generate_player deck id is_ai] is a pair of a player generated with name
+    [id] and from [deck], and the deck resulting from this generation. This
+    player is computer controlled if [is_ai] is true, and player controlled
+    otherwise.*)
 let generate_player deck id is_ai=
   let set_cards pair=
     match pair with
@@ -121,6 +133,10 @@ let generate_player deck id is_ai=
     telling_truth = true;
   },snd pair)
 
+(** [generate_player_lst deck num_players] is a pair of a list of [num_players]
+    different players generated with [deck] and the remaining deck left from
+    this generation. This includes one host player and [num_players]-1 
+    non-player-controlled players. *)
 let generate_player_lst deck num_players =
   let rec last_deck = function
     |[]->failwith "empty list of players"
@@ -134,6 +150,7 @@ let generate_player_lst deck num_players =
   let ai_enemy= generate_ai (num_players-1) (snd host) in
   ((fst host)::(List.map fst ai_enemy), last_deck ai_enemy)
 
+(** [get_player_id player] is [player]'s id, i.e. [player]'s name.*)
 let get_player_id player = 
   player.id
 
@@ -169,7 +186,7 @@ let replace_player cur_id new_player bd=
 
 (** [get_cards player bd] is the list of cards that the player identified by
     [player] controls in [bd]. If [player] is not a player in [bd] then raise
-    an invalid player exception. *)
+    an InvalidPlayer exception. *)
 let rec get_cards player bd=
   let desired_player = find_player player bd in
   [desired_player.card_one;desired_player.card_two]
@@ -191,6 +208,11 @@ let change_money player_name bd cash=
   let change_player=replace_player player_name new_player bd in
   {change_player with money_pool= change_player.money_pool - cash}
 
+(** [steal stealer_id stolen_id bd] is the result of [stealer_id] stealing from
+    [stolen_id] in [bd]. If [stolen_id] has no money to steal then
+    [steal stealer_id stolen_id bd = NoMoney], otherwise it is a legal result
+    carrying [bd] after this steal has taken place(of either one or two coins) 
+    or an illegal result.*)
 let steal stealer_id stolen_id bd=
   try
     (let stolen_player = (find_player stolen_id bd) in
@@ -205,12 +227,19 @@ let steal stealer_id stolen_id bd=
   with
     _->Illegal
 
+(** [find_player_card player_id card_id bd] is the  number(that is the first
+    or the second) of [card_id] for [player_id] in [bd]. Raises an InvalidCard
+    exception if [player_id] does not have a copy of [card_id].*)
 let find_player_card player_id card_id bd =
   let player= find_player player_id bd in
   if(Deck.get_name player.card_one=card_id) then 1 else
   if(Deck.get_name player.card_two=card_id) then 2 else 
     raise(InvalidCard (card_id))
 
+(** [turnover_card killed_id bd card] is [bd] with [killed_id]'s copy of [card]
+    turned from facedown to faceup. If [killed_id] does not contain a copy of
+    [card] then raises an InvalidCard exception. Raises a InvalidPlayer
+    exception if [killed_id] is not a player of [bd].*)
 let turnover_card killed_id bd card=
   let killed= find_player killed_id bd in 
   if(Deck.get_name killed.card_one<>Deck.get_name killed.card_two) then
@@ -228,12 +257,16 @@ let turnover_card killed_id bd card=
         {killed with card_one=Deck.set_status killed.card_one Deck.FaceUp}
     in replace_player killed_id killed bd
 
+(** [find_facedown player_id bd] is the first facedown card of [player_id] in
+    [bd]. Fails if [player_id] has no facedown cards.*)
 let find_facedown player_id bd=
   match get_cards player_id bd with
   |[]->failwith "impossible, no cards"
   |h::t when snd h = Deck.FaceDown -> h
   |h::t -> List.hd t
 
+(** [check_faceup card_list] is true if all cards of [card_list] are faceup.
+    Requires: [List.length card_list=2].*)
 let check_faceup card_list = 
   match card_list with 
   | [card1; card2] -> (snd card1 = Deck.FaceUp && snd card2 = Deck.FaceUp)
@@ -250,8 +283,9 @@ let cards player_id bd=
   |_->failwith "impossible"
 
 
-(*NOTE: This and coup I had intended to be called after the person losing a card
-  chooses what card to turn over *)
+(** [assassinate killer_id killed_id bd card_id] is a legal result of [bd] after
+    [killer_id] assassinates [killed_id]'s [card_id] in [bd], or an illegal
+    result. Requires: [card_id] is a card of [killed_id]. *)
 let assassinate killer_id killed_id bd card_id=
   try 
     let killer_paid = change_money killer_id bd (-3) in
@@ -259,7 +293,9 @@ let assassinate killer_id killed_id bd card_id=
   with
     _ -> Illegal
 
-
+(** [coup couper_id couped_id bd card_id] is a legal result of [bd] after
+    [couper_id] coups [couped_id]'s [card_id] in [bd], or an illegal
+    result. Requires: [card_id] is a card of [couped_id]. *)
 let coup couper_id couped_id bd card_id=
   try
     let couper_paid = change_money couper_id bd (-7) in
@@ -267,10 +303,16 @@ let coup couper_id couped_id bd card_id=
   with
     _ -> Illegal
 
+(** [has_both player_id bd] is true if [player_id] has no faceup cards in [bd].
+    Raises an InvalidPlayer exception if [player_id] is not a player in [bd].*)
 let has_both player_id bd =
   let cards = get_cards player_id bd in
   List.filter Deck.is_faceup cards = []
 
+(** [view_four exchanger_id bd] is a pair of the cards [exchanger_id] would
+    see in an exchange, and the deck after two cards are drawn from [bd]'s deck
+    to be viewed by [exchanger_id]. Raises an InvalidPlayer exception if
+    [exchanger_id] is not a valid player in [bd].*)
 let view_four exchanger_id bd=
   let player_cards = get_cards exchanger_id bd in
   let player_cards= List.filter Deck.is_facedown player_cards in
@@ -279,6 +321,10 @@ let view_four exchanger_id bd=
   let card2= Deck.set_status (snd (fst pair)) Deck.FaceDown in
   (card1 :: card2 :: player_cards, snd pair)
 
+(** [exchange exchanger_id bd card1 card2 deck discards] is a legal result of
+    [bd] after [exchanger_id] exchanges their cards for [card1] and [card2],
+    and has chosen to discard [discards] back into [deck] in [bd], or an
+    illegal result if an exception is raised in execution.*)
 let exchange exchanger_id bd card1 card2 deck discards=
   (* Rewritten List.map so that first arg is what is in the list*)
   let rec set_deck lst=
@@ -300,6 +346,8 @@ let exchange exchanger_id bd card1 card2 deck discards=
   with 
     _ -> Illegal
 
+(** [income player_name bd] is a legal result of [bd] after [player_name] takes
+    an income(1 coin) in [bd], or an illegal result if something goes wrong.*)
 let income player_name bd = 
   try 
     if bd.money_pool == 0 then Legal bd 
@@ -307,6 +355,9 @@ let income player_name bd =
   with
     _ -> Illegal
 
+(** [foreign_aid player_name bd] is a legal result of [bd] after [player_name] 
+    takes foreign aid(2 coins) in [bd], or an illegal result if something goes 
+    wrong.*)
 let foreign_aid player_name bd = 
   try 
     if bd.money_pool < 2 then Legal bd 
@@ -314,6 +365,8 @@ let foreign_aid player_name bd =
   with
     _ -> Illegal
 
+(** [tax player_name bd] is a legal result of [bd] after [player_name] takes
+    a tax(3 coins) in [bd], or an illegal result if something goes wrong.*)
 let tax player_name bd = 
   try
     if bd.money_pool < 3 then Legal bd 
@@ -321,6 +374,8 @@ let tax player_name bd =
   with
     _ -> Illegal
 
+(** [extract_legal b] is the board contained by [b]. If [b] is illegal then
+    [extract_legal b] is an empty, placeholder board. *)
 let extract_legal b = match b with
   | Legal i -> i
   | _ -> { (*place holder board because other results should never be used*)
@@ -333,7 +388,8 @@ let extract_legal b = match b with
     }
 
 (** [can_act actor_name action_name bd] is [true] if [actor_name] can perform
-    [action_name] in [bd]. *)
+    [action_name] in [bd]. Raises an InvalidPlayer exception if [actor_name] is
+    not a valid player in [bd].*)
 let can_act actor_name action_name bd =
   let actor_cards= get_cards actor_name bd in
   let facedown_cards= List.filter Deck.is_facedown actor_cards in
@@ -342,6 +398,9 @@ let can_act actor_name action_name bd =
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
 
+(** [can_block actor_name action_name bd] is true if [actor_name] is able to
+    block [action_name] in bd. Raises an InvalidPlayer exception if [actor_name]
+    is not a valid player in [bd].*)
 let can_block actor_name action_name bd =
   let actor_cards= get_cards actor_name bd in
   let facedown_cards= List.filter Deck.is_facedown actor_cards in
