@@ -11,7 +11,5 @@ be needed.
 
 5) When prompted you can press any key to start the game
 
-Note: We have not yet displayed the rules as part of the system itself but the
-actions that can currently be taken are "tax", "income", "foreign aid", "assassinate ai1"
-(where ai1 is the name of the ai you play against), "coup ai1", and
-"steal ai1". 
+Note: commands include steal, income, tax, foreign aid, exchange, assassinate, and
+coup
