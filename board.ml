@@ -440,3 +440,32 @@ let block bd character=
   |"ambassador" -> Legal (block_cap_amb bd)
   |"contessa" -> Legal (block_contessa bd) 
   |_ -> Illegal
+
+(** [victory bd] is the pair of whether a player has won in [bd], and the id of 
+    the player who won. If no player has won then the second member of the pair
+    is the host id.   *)
+let victory bd=
+  let rec alive_players = function
+    |[]->[]
+    |h::t when not (check_faceup [h.card_one; h.card_two]) -> h::(alive_players t)
+    |h::t -> alive_players t in
+  let curr_players= alive_players bd.current_players in
+  if(List.length curr_players=1) then (true, (List.hd curr_players).id) 
+  else (false, (get_host bd).id)
+
+(** [draw_new bd players] is [bd] with [player] putting their [card] back into
+    the deck and drawing a new card to replace it. Requires: [player] is a 
+    player in [bd], and that [card] is a facedown card controlled by [player].*)
+let draw_new bd player card=
+  let card_t= (Deck.name_to_card card, Deck.Deck) in
+  let old_player= find_player player bd in
+  let card_pos= find_player_card player card bd in
+  let new_card= Deck.draw bd.current_deck in
+  let new_player=begin
+    if(card_pos=1) then 
+      {old_player with card_one=Deck.set_status (fst new_card) Deck.FaceDown} 
+    else
+      {old_player with card_two=Deck.set_status (fst new_card) Deck.FaceDown}
+  end in
+  let new_board= replace_player player new_player bd in
+  {new_board with current_deck=Deck.shuffle_in bd.current_deck card_t}

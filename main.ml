@@ -102,6 +102,8 @@ let rec play_game b =
   let host_id = get_player_id (get_host b) in
   let non_cur_players= List.filter (fun x -> x<>host_id) (List.filter (fun x -> x<>curr_id) (player_names b)) in 
   let non_host_players= List.filter ( fun x -> x<>host_id) (player_names b) in
+  let victor= victory b in 
+  if(fst victor) then (print_endline ("Congrats "^(snd victor)^", you win!"); exit 0)else
   if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
   else 

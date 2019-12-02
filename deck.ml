@@ -12,6 +12,11 @@ exception InvalidCard of string
 let shuffle deck = 
   QCheck.Gen.(generate1 (shuffle_l deck))
 
+(** [shuffle deck] gives a random permutation of [deck] after [card] is shuffled
+    back in. *)
+let shuffle_in deck card =
+  QCheck.Gen.(generate1 (shuffle_l (card::deck)))
+
 let init_deck a = 
   shuffle [(Duke, Deck);(Duke, Deck);(Duke, Deck); 
            (Assassin, Deck);(Assassin, Deck);(Assassin, Deck);
