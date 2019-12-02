@@ -13,7 +13,10 @@ let rec choose_card bd player : string=
   |s when List.mem s card_ids->s
   |_->print_string "You do not have a copy of that card facedown, try again"; choose_card bd player
 
-
+(** [choose_two cards can_get_both] is the card or cards that the player chooses
+    from [cards] paired with the cards that remain unchosen. If [can_get_both]
+    is true then the player can choose two cards from [cards] if false then
+    the player can choose only one card from [cards]. *)
 let choose_two cards can_get_both=
   let rec list_to_string = function
     |[] -> ""
@@ -59,8 +62,6 @@ let challenge_block blocker challenger action b=
     print_endline(challenger^" successfully challenged "^blocker^"'s "^action^ " block.");
     (turnover_card blocker b card_choice,true)
 
-
-
 (** [player_challenge b action actor] is whether the player decides to challenge
     [actor]'s choice to perform [action] in [bd].*)
 let rec player_challenge b action actor target=
@@ -72,6 +73,8 @@ let rec player_challenge b action actor target=
   |"no"->false
   |_->print_string ("Invalid choice, try again."); player_challenge b action actor target
 
+(** [player_block b action actor] is true if the player would like to block the
+    action denoted by [action] being attempted by [actor] in [b].*)
 let rec player_block b action actor = 
   print_string ("Would you like to block "^actor^"'s "^action^"? 
   Either type block or continue. \n"); 
@@ -81,6 +84,9 @@ let rec player_block b action actor =
   | _ -> failwith "unimplemented"
 
 
+(** [player_challenge_block action actor] is true if the player would like to
+    challenge [actor]'s block of the action denoted by [action]. [action] 
+    may or may not be being attempted by the player.*)
 let rec player_challenge_block action actor =
   print_endline("Would you like to challenge "^actor^"'s block of "^action);
   match String.trim (String.lowercase_ascii (read_line())) with
@@ -88,6 +94,8 @@ let rec player_challenge_block action actor =
   |"no"->false
   |_->print_endline("Invalid choice, try again."); player_challenge_block action actor
 
+(** [play_game b] is one turn of execution of [b]. If a player has won in [b]
+    then print a victory message.*)
 let rec play_game b = 
   let curr_player = current_player b in
   let cards_list = get_cards (current_player_id b) b in 
@@ -95,6 +103,8 @@ let rec play_game b =
   let host_id = get_player_id (get_host b) in
   let non_cur_players= List.filter (fun x -> x<>host_id) (List.filter (fun x -> x<>curr_id) (player_names b)) in 
   let non_host_players= List.filter ( fun x -> x<>host_id) (player_names b) in
+  let victor= victory b in 
+  if(fst victor) then (print_endline ("Congrats "^(snd victor)^", you win!"); exit 0)else
   if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
   else 
