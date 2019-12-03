@@ -68,6 +68,11 @@ let check_id player_id bd=
     |h::t -> check_list t in
   check_list bd.current_players
 
+(** [everyones_info_helper accu player_list bd] is a helper function for 
+    [everyones_info bd] that takes in an accumulater, the current players,
+    and the the board to print out everyone's card and money information.
+    This function should only be used for debugging because in the actual 
+    game the cards should not be known to players.*)
 let rec everyones_info_helper accu player_list bd = (*this needs helper bc of mli*)
   match player_list with
   | [] -> accu
@@ -83,11 +88,48 @@ let rec everyones_info_helper accu player_list bd = (*this needs helper bc of ml
     let player_info = card_names^card1_info^card2_info^money_info^status^"\n" in
     everyones_info_helper (accu ^ "\n"^ player_info) t bd
 
+(** [everyones_info bd] returns a string that is meant to be printed during 
+    gameplay to display the information of all the players. Logic is in
+    [everyones_info_helper accu player_list bd] because when called in main.ml
+    the current players are not public.*)
 let everyones_info bd =
   everyones_info_helper "" bd.current_players bd
 
+(** [everyones_info_hidden_helper accu player_list bd] has almost the same 
+    function as [everyones_info_helper accu player_list bd] but instead of 
+    revealing whatcards other players have, the card types will be unknown.*)
+let rec everyones_info_hidden_helper accu player_list bd =
+  match player_list with
+  | [] -> accu
+  | h :: t->
+    let card1_stat = Deck.get_status h.card_one in
+    let card1_id = 
+      if (card1_stat = "out of play") then 
+          Deck.get_name h.card_one ^ " " ^ Deck.get_status h.card_one ^ ", "
+      else
+        "Facedown card in play, " in
+    let card2_stat = Deck.get_status h.card_two in
+    let card2_id = 
+      if (card2_stat = "out of play") then
+        Deck.get_name h.card_two ^ " " ^ Deck.get_status h.card_two
+      else
+        "Facedown card in play" in
+    let money_info= ". "^ h.id ^" has "^ string_of_int h.money ^ " coins. " in
+    let status= h.id ^" is "^ (if(h.alive) then "" else "not ")^"alive." in
+    let player_info = h.id ^ " has: "  ^ card1_id ^ card2_id ^ 
+      money_info ^ status^"\n" in
+    everyones_info_hidden_helper (accu ^ "\n"^ player_info) t bd
+
+(** [everyones_info_hidden bd] has mostly the same function as everyone's info
+    but will instead keep the card types of noncurrent players hidden. This is
+    necessary to play the game as intended. [everyones_info bd] should not be
+    used in the final release.*)
+let everyones_info_hidden bd =
+  everyones_info_hidden_helper "" bd.current_players bd
+
 (** [turn_info player bd] is the relevant information [player] will be given
-    about themselves during a turn in [bd]. *)
+    about themselves during a turn in [bd], which includes what cards they have,
+    if they're facedown or not, and the amount of money they have. *)
 let turn_info player bd=
   let card_names="Your cards are: "^Deck.get_name (player.card_one)^" and "^
                  Deck.get_name (player.card_two) in

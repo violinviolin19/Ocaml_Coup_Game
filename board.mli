@@ -21,6 +21,8 @@ val current_player_id: t -> string
 
 val everyones_info: t-> string
 
+val everyones_info_hidden : t-> string
+
 val turn_info : player->t->string
 
 val is_ai : player -> bool

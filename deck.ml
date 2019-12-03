@@ -59,7 +59,7 @@ let get_name card : string=
   |Captain -> "Captain"
   |Ambassador -> "Ambassador"
 
-(** get_status card] is a string representation of [card].*)
+(** [get_status card] is/returns a string representation of [card].*)
 let get_status card = 
   match snd card with 
   | Deck -> "in the deck"
@@ -67,7 +67,8 @@ let get_status card =
   | FaceUp -> "out of play"
 
 (** [get_action card] is the action that [card] can perform. [get_action card]
-    is "None" if [card] can not perform an action.*)
+    is "None" if [card] can not perform an action. The action is returned as
+    a string*)
 let get_action card =
   match fst card with
   |Duke -> "Tax"

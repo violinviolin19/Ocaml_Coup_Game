@@ -103,12 +103,14 @@ let rec play_game b =
   let host_id = get_player_id (get_host b) in
   let non_cur_players= List.filter (fun x -> x<>host_id) (List.filter (fun x -> x<>curr_id) (player_names b)) in 
   let non_host_players= List.filter ( fun x -> x<>host_id) (player_names b) in
+  (* begin code that handles detecting win condition *)
   let victor= victory b in 
   if(fst victor) then (print_endline ("Congrats "^(snd victor)^", you win!"); exit 0)else
   if (not (is_ai curr_player) &&check_faceup cards_list) then (print_string "You have lost influence. Good luck next time! \n"; exit 0) else
   if (is_ai curr_player&& check_faceup cards_list) then (print_string "Congrats, you win! \n"; exit 0) 
+  (* end code that detects win condition *)
   else 
-
+  (* begin code that handles ai1's input command to process a turn *)
   if(is_ai (current_player b)) then
     match turn curr_id b with
     |Income -> let new_b = income curr_id b in 
@@ -445,12 +447,13 @@ let rec play_game b =
          print_string "\n> ";
          play_game b)
     | _ -> failwith "unimplemented"
-
+  (* end code to process ai1's command *)
   (*play_game(next_turn b)*)
   else
-    print_string(everyones_info b ^ "\n");
-  print_string(turn_info (get_host b) b);
-  try match parse (read_line ()) with
+    print_string(everyones_info b ^ "\n"); (* is debugging info at the moment, 
+    call everyones_info_hidden instead when we are ready*)
+    print_string(turn_info (get_host b) b);
+    try match parse (read_line ()) with
     | Quit -> exit 0
     | Exchange -> begin
         let challenger = should_any_challenge non_cur_players b "Exchange" "" in
