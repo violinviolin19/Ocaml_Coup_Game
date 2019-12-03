@@ -9,7 +9,7 @@ type t
 (** The abstraction type for a player*)
 type player
 
-type result = Legal of t | Illegal | NoMoney
+type result = Legal of t | Illegal | NoMoney | MoneyOverflow
 
 (** Changes the board from one player's turn to the next*)
 val next_turn : t -> t
@@ -20,6 +20,8 @@ val current_player: t->player
 val current_player_id: t -> string
 
 val everyones_info: t-> string
+
+val everyones_info_hidden : t-> string
 
 val turn_info : player->t->string
 
@@ -81,3 +83,5 @@ val make_player_lie : t -> t
 val can_block : string -> string -> t -> bool
 
 val id_is_ai : string -> t -> bool
+
+val victory : t -> (bool*string)
