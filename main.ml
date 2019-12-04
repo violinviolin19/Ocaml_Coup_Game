@@ -144,14 +144,17 @@ let rec play_game b =
     |ForeignAid -> let new_b = foreign_aid (current_player_id b) b in
       print_endline (current_player_id b ^ " tries to take foreign aid");
       if (player_block b "Foreign Aid" (current_player_id b)) then 
+        (* The human player has tried to block the ai's foreign aid*)
         (print_endline "You blocked the action.";
          let challenger= any_challenge_block non_host_players b "Foreign Aid" 
              curr_id in
          if(fst challenger) then
+           (* An ai has challenged the player's block *)
            let challenger_id = snd challenger in
            let challenge_st = challenge_block host_id challenger_id 
                "Foreign Aid" b in
            if(snd challenge_st) then
+             (* challenge suceeded so ai must take their aid*)
              let new_b = foreign_aid (current_player_id b) (fst challenge_st) in
              if new_b != Illegal then
                let legal_item = extract_legal (new_b) in
@@ -164,17 +167,21 @@ let rec play_game b =
                 print_string "\n> ";
                 play_game b)
            else
+             (* challenge failed, no foreign aid taken *)
              play_game (next_turn (fst challenge_st))
 
          else
+           (* aid blocked by player and not challenged *)
          if (can_block host_id "Foreign Aid" b) then 
            play_game (next_turn b)
          else 
            play_game (next_turn (make_player_lie b)))
       else 
+        (* No player block, unsure if ai will block*)
         let ai_blocker= should_any_block non_cur_players b "Foreign Aid" 
             curr_id in
         if(not (fst ai_blocker)) then
+          (* ai did not block, foreign aid taken normally*)
           if new_b != Illegal then
             let legal_item = extract_legal (new_b) in
             print_endline (current_player_id b ^ " takes foreign aid. \n");
@@ -186,6 +193,7 @@ let rec play_game b =
              print_string "\n> ";
              play_game b)
         else
+          (* ai does block, foreign aid not taken*)
           begin
             let blocker= snd ai_blocker in
             print_endline (blocker^ "blocked "^curr_id^"'s foreign aid."); 
@@ -199,13 +207,16 @@ let rec play_game b =
           killed_id in
       print_endline (current_player_id b ^ " tries to steal from "^killed_id);
       if (player_block b "Steal" (current_player_id b)) then 
+        (* The player has elected to block the steal*)
         let block_challenger= any_challenge_block non_host_players b "Steal" 
             curr_id in
         if(fst block_challenger) then
+          (* An ai has chosen to challenge this block*)
           let challenger= snd block_challenger in
           let challenge_st = challenge_block host_id challenger "Steal" b in
           let new_b= fst challenge_st in
           if(snd challenge_st) then
+            (* The challenge worked, now the steal occurs*)
             let new_b= steal (current_player_id new_b) killed_id new_b in
             if(new_b!= Illegal) then
               let legal_item = extract_legal new_b in
@@ -217,24 +228,32 @@ let rec play_game b =
                print_string "\n> ";
                play_game b)
           else
+            (* The challenge failed, the player block goes through with the board
+               after a card is turned over.*)
             (print_endline "You blocked the action."; 
              if (can_block killed_id "Steal" b) then 
                play_game (next_turn new_b)
              else 
                play_game (next_turn (make_player_lie new_b)))
         else
+          (* The ai does not challenge the action, the block goes through 
+             normally.*)
           (print_endline "You blocked the action."; 
            if (can_block killed_id "Steal" b) then 
              play_game (next_turn b)
            else 
              play_game (next_turn (make_player_lie b)))
       else
+        (* No player block, check if ai will block or challenge*)
         let ai_blocker = should_any_block non_cur_players b "Steal" killed_id in
         let block_challenger= any_challenge_block non_cur_players b "Steal" 
             curr_id in
         if(not (fst ai_blocker)) then
+          (* The ai does not block, will the player challenge the steal? *)
           if(player_challenge b "Steal" (current_player_id b) killed_id) then
+            (* The player has chosen to challenge*)
             if(can_act curr_id "Steal" b) then
+              (* The stealer is indeed able to steal*)
               let card_choice = choose_card b host_id in
               print_string (
                 "You have failed in your challenge, now you must turnover your "
@@ -252,12 +271,14 @@ let rec play_game b =
                  print_string "\n> ";
                  play_game b)
             else
+              (* The stealer is not able to steal so your challenge worked*)
               let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
               print_string("You were right! "^curr_id^" turns over their "^
                            card_choice ^ "\n");
               let turnover= turnover_card curr_id b card_choice in
               play_game (next_turn turnover)
           else if (not(fst ai_challenger)) then
+            (* no ai challenger, steal goes through normally*)
             let new_b= steal (current_player_id b) killed_id b in
             if(new_b!= Illegal) then
               let legal_item = extract_legal new_b in
@@ -269,8 +290,10 @@ let rec play_game b =
                print_string "\n> ";
                play_game b)
           else
+            (* An ai challenges the steal. *)
             let challenger_id= snd ai_challenger in 
             if(can_act curr_id "Steal" b) then
+              (* The stealer was able to steal, challenge failed*)
               let card_choice= Deck.get_name 
                   (Board.find_facedown challenger_id b) in
               print_endline (challenger_id^" challenged "^curr_id
@@ -288,17 +311,23 @@ let rec play_game b =
                  print_string "\n> ";
                  play_game b)
             else
+              (* The stealer was not able to steal, challenge succeeds*)
               (print_endline (challenger_id^"successfully challenged"^curr_id
                               ^"'s steal");
                let card_choice = choose_card b curr_id in
                play_game (next_turn (turnover_card curr_id b card_choice)))
         else begin
+          (* An ai does choose to block the steal.*)
           let blocker= snd ai_blocker in
-          if(fst block_challenger) then
+          if(fst block_challenger&&blocker<>snd block_challenger) then
+            (* Does an ai block the challenge? is this challenger the same as
+               the blocker?*)
             let challenge_st= challenge_block blocker (snd block_challenger) 
                 "Steal" b in
             let new_b= fst challenge_st in
             if(snd challenge_st) then
+              (* the challenge succeeds, block fails, so the steal continues
+                 as normal.*)
               let new_b= steal (current_player_id new_b) killed_id new_b in
               if(new_b!= Illegal) then
                 let legal_item = extract_legal new_b in
@@ -311,11 +340,13 @@ let rec play_game b =
                  print_string "\n> ";
                  play_game b)
             else
+              (* the challenge fails, block succeeds, steal does not occur*)
               (if (can_block blocker "Steal" b) then 
                  play_game (next_turn new_b)
                else 
                  play_game (next_turn (make_player_lie new_b)))
           else
+            (* There is no challenge on the block*)
             (print_endline (blocker^ "blocked the steal."); 
              if (can_block blocker "Steal" b) then 
                play_game (next_turn b)
@@ -641,20 +672,26 @@ let rec play_game b =
       let challenger= should_any_challenge non_cur_players b "Steal" 
           killed_id in
       if(check_id killed_id b) then
+        (* Is the target of the steal actually a player of the game*)
         let ai_blocker =should_any_block non_cur_players b "Steal" killed_id in
         let ai_challenger= any_challenge_block non_cur_players b 
             "Steal" host_id in
         if(fst ai_blocker) then
+          (* An ai has chosen to block the action*)
           begin
             let blocker= snd ai_blocker in
             let player_chal= player_challenge_block "Steal" blocker in
+            (* will a player challenge the block or will the ai?*)
             let block_challenger= if(player_chal) then (true, host_id) 
               else ai_challenger in
-            if(fst block_challenger) then
+            if(fst block_challenger&&snd block_challenger<>blocker) then
+              (* someone is going to challenge the block, and its not the
+                 blocker themself*)
               let challenger_st= challenge_block blocker (snd block_challenger)
                   "Steal" b in
               let new_b= fst challenger_st in
               if(snd challenger_st) then
+                (* The challenge succeeds, steal goes on as normal*)
                 let new_b= steal (current_player_id new_b) killed_id new_b in
                 if(new_b!= Illegal && new_b != NoMoney) then
                   let legal_item = extract_legal new_b in
@@ -673,11 +710,13 @@ let rec play_game b =
                    print_string "\n> ";
                    play_game b)
               else
+                (* The challenge fails, block goes on as normal*)
                 (if (can_block blocker "Steal" b) then 
                    play_game (next_turn new_b)
                  else 
                    play_game (next_turn (make_player_lie new_b)))
             else
+              (* Nobody is choosing to challenge the block *)
               (print_endline (blocker^ "blocked "^curr_id^"'s steal."); 
                if (can_block blocker "Steal" b) then 
                  play_game (next_turn b)
@@ -685,6 +724,7 @@ let rec play_game b =
                  play_game (next_turn (make_player_lie b)))
           end
         else if(not(fst challenger)) then
+          (* Nobody is choosing to challenge, the steal goes on normally*)
           let new_b= steal (current_player_id b) killed_id b in
           if(new_b!= Illegal && new_b != NoMoney) then
             let legal_item = extract_legal new_b in
@@ -700,8 +740,10 @@ let rec play_game b =
              print_string "\n> ";
              play_game b)
         else
+          (* Somebody is challenging the steal*)
           let challenger_id= snd challenger in 
           if(can_act curr_id "Steal" b) then
+            (* Challenge fails, steal like normal*)
             let card_choice= Deck.get_name 
                 (Board.find_facedown challenger_id b) in
             print_endline
@@ -712,6 +754,7 @@ let rec play_game b =
                 (steal (current_player_id b) killed_id b) in
             play_game (turnover_card challenger_id new_b card_choice)
           else
+            (* Challenge succeeds, steal does not occur*)
             (print_endline (challenger_id^"successfully challenged your Steal");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
