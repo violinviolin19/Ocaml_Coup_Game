@@ -108,10 +108,10 @@ let rec player_challenge_block action actor =
 (** [play_game b] is one turn of execution of [b]. If a player has won in [b]
     then print a victory message.*)
 let rec play_game b = 
-  let curr_player = current_player b in
-  let cards_list = get_cards (current_player_id b) b in 
   let curr_id= current_player_id b in
+  let cards_list= get_cards curr_id b in
   let host_id = get_player_id (get_host b) in
+  let host_cards= get_cards host_id b in
   let non_cur_players= List.filter (fun x -> x<>host_id)
       (List.filter (fun x -> x<>curr_id) (player_names b)) in 
   let non_host_players= List.filter ( fun x -> x<>host_id) (player_names b) in
@@ -119,9 +119,9 @@ let rec play_game b =
   let victor= victory b in 
   if(fst victor) then (print_endline ("Congrats "^(snd victor)^", you win!");
                        exit 0)else
-  if (not (is_ai curr_player) &&check_faceup cards_list) then 
+  if (check_faceup host_cards) then 
     (print_string "You have lost influence. Good luck next time! \n"; exit 0) 
-  else
+  else if(Board.check_faceup cards_list) then play_game (next_turn b) else
     (* end code that detects win condition *)
     (* begin code that handles ai1's input command to process a turn *)
   if(is_ai (current_player b)) then
@@ -165,7 +165,8 @@ let rec play_game b =
                 play_game b)
            else
              (* challenge failed, no foreign aid taken *)
-             play_game (next_turn (fst challenge_st))
+             let new_card= Board.draw_new (fst challenge_st) host_id "Duke" in
+             play_game (next_turn (new_card))
 
          else
            (* aid blocked by player and not challenged *)
@@ -227,11 +228,13 @@ let rec play_game b =
           else
             (* The challenge failed, the player block goes through with the board
                after a card is turned over.*)
+            let player_card= Board.which_block_steal b host_id in
+            let new_card= Board.draw_new (new_b) host_id player_card in
             (print_endline "You blocked the action."; 
              if (can_block killed_id "Steal" b) then 
-               play_game (next_turn new_b)
+               play_game (next_turn new_card)
              else 
-               play_game (next_turn (make_player_lie new_b)))
+               play_game (next_turn (make_player_lie new_card)))
         else
           (* The ai does not challenge the action, the block goes through 
              normally.*)
@@ -261,7 +264,8 @@ let rec play_game b =
                 let legal_item = extract_legal new_b in
                 print_endline (current_player_id b ^ " steals from "^killed_id);
                 print_string "\n ";
-                (play_game(next_turn legal_item))
+                let new_card= Board.draw_new legal_item curr_id "Captain" in
+                (play_game(next_turn new_card))
               else
                 (print_endline
                    "That's not a valid command to steal try again \n";
@@ -301,7 +305,8 @@ let rec play_game b =
                 let legal_item = extract_legal new_b in
                 print_endline (current_player_id b ^ " steals from "^killed_id);
                 print_string "\n ";
-                (play_game(next_turn legal_item))
+                let new_card= Board.draw_new legal_item curr_id "Captain" in
+                play_game(next_turn new_card)
               else
                 (print_endline 
                    "That's not a valid command to steal try again \n";
@@ -317,7 +322,7 @@ let rec play_game b =
           (* An ai does choose to block the steal.*)
           let blocker= snd ai_blocker in
           if(fst block_challenger&&blocker<>snd block_challenger) then
-            (* Does an ai block the challenge? is this challenger the same as
+            (* Does an ai challenge the block? is this challenger the same as
                the blocker?*)
             let challenge_st= challenge_block blocker (snd block_challenger) 
                 "Steal" b in
@@ -338,10 +343,12 @@ let rec play_game b =
                  play_game b)
             else
               (* the challenge fails, block succeeds, steal does not occur*)
+              let card= Board.which_block_steal b blocker in
+              let new_card= Board.draw_new new_b blocker card in
               (if (can_block blocker "Steal" b) then 
-                 play_game (next_turn new_b)
+                 play_game (next_turn new_card)
                else 
-                 play_game (next_turn (make_player_lie new_b)))
+                 play_game (next_turn (make_player_lie new_card)))
           else
             (* There is no challenge on the block*)
             (print_endline (blocker^ "blocked the steal."); 
@@ -365,7 +372,8 @@ let rec play_game b =
             let legal_item = extract_legal (new_b) in
             print_endline (current_player_id b ^ " takes tax. \n");
             print_string "\n> ";
-            play_game (next_turn legal_item)
+            let new_card= Board.draw_new legal_item curr_id "Duke" in
+            play_game (next_turn new_card)
           else
             (print_endline "That's not a valid command to take tax try again\n";
              print_string "\n> ";
@@ -390,7 +398,8 @@ let rec play_game b =
             let legal_item = extract_legal (new_b) in
             print_endline (current_player_id b ^ " takes tax. \n");
             print_string "\n> ";
-            play_game (next_turn legal_item)
+            let new_card= Board.draw_new legal_item curr_id "Duke" in
+            play_game (next_turn new_card)
           else
             (print_endline "That's not a valid command to take tax try again\n";
              print_string "\n> ";
@@ -425,7 +434,8 @@ let rec play_game b =
           (if player_block then (true,host_id) else (true,snd ai_blocker)) 
         else (false,host_id) in
       let blocker_id= snd blocker in
-      if (fst blocker) then 
+      if(fst blocker&&check_id killed_id b&&check_bank (current_player_id b)3 b) 
+      then 
         let challenger= if(blocker_id=host_id) then block_challenge else 
             (player_challenge_block "Assassinate" blocker_id, host_id) in
         let challenger= if(fst challenger= false) then block_challenge else 
@@ -448,10 +458,11 @@ let rec play_game b =
               play_game board
           else
             (print_endline (killed_id^" blocked the assassination."); 
+             let new_card= Board.draw_new board killed_id "Contessa" in
              if (can_block killed_id "Assassinate" b) then 
-               play_game (next_turn board)
+               play_game (next_turn new_card)
              else 
-               play_game (next_turn (make_player_lie board)))
+               play_game (next_turn (make_player_lie new_card)))
         else
           (print_endline (killed_id^" blocked the assassination."); 
            if (can_block killed_id "Assassinate" b) then 
@@ -477,7 +488,8 @@ let rec play_game b =
               print_endline (current_player_id b ^ " assassinates "^killed_id
                              ^"'s "^card);
               print_string "\n> ";
-              play_game (next_turn legal_item) 
+              let new_card= Board.draw_new legal_item curr_id "Assassin" in
+              play_game (next_turn new_card) 
             else 
               (* Impossible case, only here for syntatic reasons*)
               play_game b
@@ -514,7 +526,8 @@ let rec play_game b =
               print_endline (current_player_id b ^ " assassinates "
                              ^killed_id^"'s "^card);
               print_string "\n> ";
-              play_game (next_turn legal_item) 
+              let new_card= Board.draw_new legal_item killed_id "Assassin" in
+              play_game (next_turn new_card) 
             else 
               play_game b
           else
@@ -565,12 +578,13 @@ let rec play_game b =
               " challenged your exchange unsuccessfully, they turned over their"
               ^ " " ^ card_choice);
             let new_st= turnover_card challenger_id b card_choice in
-            let both= has_both curr_id b in
-            let cards= view_four curr_id b in
+            let new_card= Board.draw_new new_st host_id "Ambassador" in
+            let both= has_both curr_id new_card in
+            let cards= view_four curr_id new_card in
             let choice_info = choose_two (fst cards) both in
             let discards= snd choice_info in
             let chosen= fst choice_info in
-            let new_b = exchange curr_id new_st (fst chosen) (snd chosen)
+            let new_b = exchange curr_id new_card (fst chosen) (snd chosen)
                 (snd cards) discards in
             if new_b != Illegal then
               let legal_item = extract_legal (new_b) in
@@ -640,19 +654,19 @@ let rec play_game b =
         else
           let challenger= if(player_challenge) then host_id else
               (snd(block_challenger)) in
-          let challenge= challenge_block blocker_id (challenger) 
+          let challenge= challenge_block blocker_id challenger 
               "Foreign Aid" b in
-          if(snd challenge) then play_game (next_turn (fst(challenge))) 
-          else if new_b != Illegal then
+          let challenge_st= fst(challenge) in
+          if(snd challenge) then 
+            let new_b = foreign_aid (current_player_id b) challenge_st in
             let legal_item = extract_legal (new_b) in
             print_endline (current_player_id b ^ " takes foreign aid. \n");
             print_string "\n> ";
             play_game (next_turn legal_item)
           else 
-            (print_endline 
-               "That's not a valid command to take foreign aid try again.\n";
-             print_string "\n> ";
-             play_game b)
+            (print_endline (blocker_id^ "blocked "^curr_id^"'s foreign aid."); 
+             let new_card= Board.draw_new b blocker_id "Ambassador" in
+             play_game(next_turn new_card))
       else
       if new_b != Illegal then
         let legal_item = extract_legal (new_b) in
@@ -708,10 +722,13 @@ let rec play_game b =
                    play_game b)
               else
                 (* The challenge fails, block goes on as normal*)
+                let player_card= Board.which_block_steal b blocker in
+                let new_card= Board.draw_new (new_b) blocker player_card in
+
                 (if (can_block blocker "Steal" b) then 
-                   play_game (next_turn new_b)
+                   play_game (next_turn new_card)
                  else 
-                   play_game (next_turn (make_player_lie new_b)))
+                   play_game (next_turn (make_player_lie new_card)))
             else
               (* Nobody is choosing to challenge the block *)
               (print_endline (blocker^ "blocked "^curr_id^"'s steal."); 
@@ -747,8 +764,10 @@ let rec play_game b =
               (challenger_id^
                " challenged your Steal unsuccessfully, they turned over their "^
                card_choice);
+            let player_card= Board.which_block_steal b host_id in
+            let new_card= Board.draw_new (b) host_id player_card in
             let new_b = extract_legal 
-                (steal (current_player_id b) killed_id b) in
+                (steal (current_player_id b) killed_id new_card) in
             play_game(next_turn (turnover_card challenger_id new_b card_choice))
           else
             (* Challenge succeeds, steal does not occur*)
@@ -783,7 +802,8 @@ let rec play_game b =
              " challenged your Tax unsuccessfully, they turned over their "^
              card_choice);
           let new_b = extract_legal (tax (current_player_id b) b) in
-          play_game (next_turn(turnover_card challenger_id new_b card_choice))
+          let new_card= Board.draw_new new_b host_id "Duke" in
+          play_game (next_turn(turnover_card challenger_id new_card card_choice))
         else
           (print_endline (challenger_id^"successfully challenged your Tax");
            let card_choice = choose_card b curr_id in
@@ -818,10 +838,11 @@ let rec play_game b =
                 else 
                   play_game b
               else
+                let new_card= Board.draw_new new_b killed_id "Contessa" in
                 (if (can_block killed_id "Assassination" b) then 
-                   play_game (next_turn new_b)
+                   play_game (next_turn new_card)
                  else 
-                   play_game (next_turn (make_player_lie new_b)))
+                   play_game (next_turn (make_player_lie new_card)))
             else
             if (can_block killed_id "Assassination" b) then 
               play_game (next_turn b)
@@ -849,7 +870,8 @@ let rec play_game b =
                " challenged your assassination unsuccessfully" ^ ", " ^
                "they turned over their "^card_choice);
             let card= Deck.get_name (Board.find_facedown killed_id b) in
-            let new_b= assassinate (current_player_id b) killed_id b card in 
+            let new_b= Board.draw_new b host_id "Assassin" in
+            let new_b= assassinate (current_player_id b) killed_id new_b card in 
             if new_b != Illegal then
               let legal_item = extract_legal new_b in
               print_endline (current_player_id b ^ " assassinates "^

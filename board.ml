@@ -284,6 +284,10 @@ let check_faceup card_list =
   | [card1; card2] -> (snd card1 = Deck.FaceUp && snd card2 = Deck.FaceUp)
   | _ -> failwith "Something went wrong"
 
+let is_alive bd player=
+  let cards= get_cards player bd in
+  not(check_faceup cards)
+
 
 let cards player_id bd=
   let card_list =get_cards player_id bd in
@@ -424,19 +428,17 @@ let block bd character=
   |"contessa" -> Legal (block_contessa bd) 
   |_ -> Illegal
 
+let rec alive_players = function
+  |[]->[]
+  |h::t when not (check_faceup [h.card_one; h.card_two]) ->
+    h::(alive_players t)
+  |h::t -> alive_players t 
+
 let victory bd=
-  let rec alive_players = function
-    |[]->[]
-    |h::t when not (check_faceup [h.card_one; h.card_two]) ->
-      h::(alive_players t)
-    |h::t -> alive_players t in
   let curr_players= alive_players bd.current_players in
   if(List.length curr_players=1) then (true, (List.hd curr_players).id) 
   else (false, (get_host bd).id)
 
-(** [draw_new bd players] is [bd] with [player] putting their [card] back into
-    the deck and drawing a new card to replace it. Requires: [player] is a 
-    player in [bd], and that [card] is a facedown card controlled by [player].*)
 let draw_new bd player card=
   let card_t= (Deck.name_to_card card, Deck.Deck) in
   let old_player= find_player player bd in
@@ -450,3 +452,9 @@ let draw_new bd player card=
   end in
   let new_board= replace_player player new_player bd in
   {new_board with current_deck=Deck.shuffle_in bd.current_deck card_t}
+
+let which_block_steal bd player=
+  let cards= get_cards player bd in
+  let cards= List.filter Deck.is_facedown cards in
+  let cards= List.map Deck.get_name cards in
+  if(List.mem "Ambassador" cards) then "Ambassador" else "Captain"
