@@ -122,10 +122,7 @@ let rec play_game b =
   if (not (is_ai curr_player) &&check_faceup cards_list) then 
     (print_string "You have lost influence. Good luck next time! \n"; exit 0) 
   else
-  if (is_ai curr_player&& check_faceup cards_list) then 
-    (print_string "Congrats, you win! \n"; exit 0) 
     (* end code that detects win condition *)
-  else 
     (* begin code that handles ai1's input command to process a turn *)
   if(is_ai (current_player b)) then
     match turn curr_id b with
@@ -314,7 +311,7 @@ let rec play_game b =
               (* The stealer was not able to steal, challenge succeeds*)
               (print_endline (challenger_id^"successfully challenged"^curr_id
                               ^"'s steal");
-               let card_choice = choose_card b curr_id in
+               let card_choice = Deck.get_name(Board.find_facedown curr_id b) in
                play_game (next_turn (turnover_card curr_id b card_choice)))
         else begin
           (* An ai does choose to block the steal.*)
@@ -388,7 +385,7 @@ let rec play_game b =
           print_endline (challenger_id^" turns over their "^card_choice
                          ^" after failing to challenge "^curr_id);
           let new_b = tax (current_player_id b) 
-              (turnover_card curr_id b card_choice) in
+              (turnover_card challenger_id b card_choice) in
           if new_b != Illegal then 
             let legal_item = extract_legal (new_b) in
             print_endline (current_player_id b ^ " takes tax. \n");
@@ -752,7 +749,7 @@ let rec play_game b =
                card_choice);
             let new_b = extract_legal 
                 (steal (current_player_id b) killed_id b) in
-            play_game (turnover_card challenger_id new_b card_choice)
+            play_game(next_turn (turnover_card challenger_id new_b card_choice))
           else
             (* Challenge succeeds, steal does not occur*)
             (print_endline (challenger_id^"successfully challenged your Steal");
@@ -786,7 +783,7 @@ let rec play_game b =
              " challenged your Tax unsuccessfully, they turned over their "^
              card_choice);
           let new_b = extract_legal (tax (current_player_id b) b) in
-          play_game (turnover_card challenger_id new_b card_choice)
+          play_game (next_turn(turnover_card challenger_id new_b card_choice))
         else
           (print_endline (challenger_id^"successfully challenged your Tax");
            let card_choice = choose_card b curr_id in
@@ -920,7 +917,7 @@ let main ()=
   print_endline "Press enter to Start\n";
   print_string  "> ";
   let deck = init_deck ""in 
-  let board = init_board deck 2 in
+  let board = init_board deck 3 in
   match read_line () with
   | _ -> play_game board (*fix later*)
 

@@ -4,7 +4,7 @@ type actions = Income | ForeignAid | Tax | Steal of string | Assassinate of stri
 let actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"; "Exchange"; "Coup"]
 let income_actions = ["Income"; "Foreign Aid"; "Tax"; "Steal"]
 let hostile_actions = ["Steal"; "Assassinate"]
-let random_nums = [0;1]
+let random_nums = [0;1;2]
 let basic_actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"]
 
 type t= {
