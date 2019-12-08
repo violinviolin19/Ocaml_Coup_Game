@@ -116,15 +116,9 @@ let should_challenge ai_id action target bd=
   let ai= new_ai ai_id bd in
   Random.self_init ();
   if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) 
-    <<<<<<< HEAD
-  then false else
-  if(action="Assassinate "^ai.id) then true else
-  if(random_elt random_nums = 0) then true else false
-                                                =======
-then false 
-else if(action="Assassinate "^ai.id) then true 
-else if(random_elt random_nums = 0) then true else false
-  >>>>>>> eee17718ffc722d46c68af62d7413b394321db86
+  then false 
+  else if(action="Assassinate "^ai.id) then true 
+  else if(random_elt random_nums = 0) then true else false
 
 (** [can_block_steal card_list] is true if a player with [card_list] as their
     facedown cards can block a steal.*)
