@@ -1,7 +1,9 @@
 open Board
 type mood = Random | Other
-type actions = Income | ForeignAid | Tax | Steal of string | Assassinate of string | Coup of string | Exchange
-let actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"; "Exchange"; "Coup"]
+type actions = Income | ForeignAid | Tax | Steal of string 
+             | Assassinate of string | Coup of string | Exchange
+let actions = 
+  ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"; "Exchange"; "Coup"]
 let income_actions = ["Income"; "Foreign Aid"; "Tax"; "Steal"]
 let hostile_actions = ["Steal"; "Assassinate"]
 let random_nums = [0;1;2]
@@ -110,14 +112,15 @@ let action_to_string action =
   *)
 
 (** [should_challenge ai_id action target bd] is true if the ai identified by
-    [ai_id] will challenge the [action] directed towards [target] in [bd]. [target] is
-    "" if there is no target of [action].*)
+    [ai_id] will challenge the [action] directed towards [target] in [bd]. 
+    [target] is "" if there is no target of [action].*)
 let should_challenge ai_id action target bd=
   let ai= new_ai ai_id bd in
   Random.self_init ();
-  if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) then false else
-  if(action="Assassinate "^ai.id) then true else
-  if(random_elt random_nums = 0) then true else false
+  if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) 
+  then false 
+  else if(action="Assassinate "^ai.id) then true 
+  else if(random_elt random_nums = 0) then true else false
 
 (** [can_block_steal card_list] is true if a player with [card_list] as their
     facedown cards can block a steal.*)
@@ -157,6 +160,7 @@ let should_any_block ids bd action target=
   let rec blocks = function
     |[]->(false, target)
     |h::t -> if(should_block h bd action target) then (true, h) else blocks t in
+  let ids= List.filter (is_alive bd) ids in
   blocks ids
 
 (** [should_any_challenge ids bd action target] is a pair of whether any of
@@ -167,7 +171,9 @@ let should_any_block ids bd action target=
 let should_any_challenge ids bd action target=
   let rec challenges = function
     |[]->(false, target)
-    |h::t-> if(should_challenge h action target bd) then (true,h) else challenges t in
+    |h::t-> if(should_challenge h action target bd) then (true,h) 
+      else challenges t in
+  let ids= List.filter (is_alive bd) ids in
   challenges ids
 
 (** should_challenge_block id action actor bd] is true if the 
@@ -189,5 +195,7 @@ let should_challenge_block id action actor bd=
 let any_challenge_block ids bd action actor=
   let rec blocks = function
     |[]->(false,actor)
-    |h::t -> if(should_challenge_block h action actor bd) then (true,h) else blocks t in
+    |h::t -> if(should_challenge_block h action actor bd) then (true,h) 
+      else blocks t in
+  let ids= List.filter (is_alive bd) ids in
   blocks ids
