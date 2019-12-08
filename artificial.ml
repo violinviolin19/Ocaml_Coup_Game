@@ -113,7 +113,8 @@ let action_to_string action =
 let should_challenge ai_id action target bd=
   let ai= new_ai ai_id bd in
   Random.self_init ();
-  if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) then false else
+  if(Board.has_both ai.id ai.board && action^" "^target="Assassinate "^ai.id) 
+  then false else
   if(action="Assassinate "^ai.id) then true else
   if(random_elt random_nums = 0) then true else false
 
@@ -165,7 +166,8 @@ let should_any_block ids bd action target=
 let should_any_challenge ids bd action target=
   let rec challenges = function
     |[]->(false, target)
-    |h::t-> if(should_challenge h action target bd) then (true,h) else challenges t in
+    |h::t-> if(should_challenge h action target bd) then (true,h)
+      else challenges t in
   challenges ids
 
 (** should_challenge_block id action actor bd] is true if the 
@@ -187,5 +189,6 @@ let should_challenge_block id action actor bd=
 let any_challenge_block ids bd action actor=
   let rec blocks = function
     |[]->(false,actor)
-    |h::t -> if(should_challenge_block h action actor bd) then (true,h) else blocks t in
+    |h::t -> if(should_challenge_block h action actor bd) then (true,h) 
+      else blocks t in
   blocks ids

@@ -518,3 +518,9 @@ let draw_new bd player card=
   end in
   let new_board= replace_player player new_player bd in
   {new_board with current_deck=Deck.shuffle_in bd.current_deck card_t}
+
+let get_deck bd = 
+  bd.current_deck
+
+let switch_card bd player card = 
+  let 

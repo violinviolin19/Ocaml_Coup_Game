@@ -554,7 +554,8 @@ let rec play_game b =
               (* Only needed for syntatic reasons*)
               play_game b
           else
-            (print_endline (challenger_id^"successfully challenged your Tax");
+            (print_endline (challenger_id^"successfully challenged your 
+            Exchange");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
         else
