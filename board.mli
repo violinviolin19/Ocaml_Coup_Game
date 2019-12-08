@@ -1,4 +1,3 @@
-
 (* type deck = Deck of Deck.t | Not_deck *)
 exception InvalidPlayer of string
 exception InvalidCard of string
@@ -112,7 +111,7 @@ val cards : string -> t -> string
 (** [check_pool bd] is the amount of money avalaible in the center in [bd].*)
 val check_pool : t->int
 
-(** player_names bd] is a list of the string representations(names or ids) of 
+(** [player_names bd] is a list of the string representations(names or ids) of 
     the players of [bd].*)
 val player_names : t -> string list
 

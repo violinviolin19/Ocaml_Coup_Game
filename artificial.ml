@@ -96,8 +96,6 @@ let action ai=
   if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
     Assassinate (random_elt ai.players)
 
-(** [turn player_id bd] is the action that the non-player-controlled [player_id]
-    chooses to take in [bd].*)
 let turn player_id bd=
   let ai= new_ai player_id bd in
   action ai
@@ -134,8 +132,6 @@ let can_block_assassinate card_list =
   let cards= List.map (Deck.get_name) card_list in
   List.mem "Contessa" cards 
 
-(** [should_block ai_id bd action target] is true if the non-player-controlled
-    [ai_id] will choose to block the [action] directed at [target] in [bd].*)
 let should_block ai_id bd action target=
   let ai= new_ai ai_id bd in
   Random.self_init ();
@@ -152,10 +148,6 @@ let should_block ai_id bd action target=
   |"Foreign Aid"-> random_elt random_nums = 0
   |_ -> failwith "Not a blockable action"
 
-(** [should_any_block ids bd action target] is a pair of whether any of [ids] 
-    will choose to block the [action] directed towards [target] in [bd], and
-    the member of [ids] that will do this blocking. If none of [ids] chooses to
-    block then [should_any_block ids bd action target] is (false,target).*)
 let should_any_block ids bd action target=
   let rec blocks = function
     |[]->(false, target)
@@ -163,11 +155,6 @@ let should_any_block ids bd action target=
   let ids= List.filter (is_alive bd) ids in
   blocks ids
 
-(** [should_any_challenge ids bd action target] is a pair of whether any of
-    [ids] will choose to challenge the [action] directed towards [target] in 
-    [bd], and the member of [ids] that will do this challenging. If none of 
-    [ids] chooses to challenge then [should_any_challenge ids bd action target] 
-    is (false,target).*)
 let should_any_challenge ids bd action target=
   let rec challenges = function
     |[]->(false, target)
@@ -187,11 +174,6 @@ let should_challenge_block id action actor bd=
   |"Foreign Aid"-> if(actor=id) then true else false
   |_-> failwith "Not a blockable action"
 
-(** [any_challenge_block ids bd action actor] is a pair of whether any of [ids]
-    will choose to challenge the block towards the [action] performed by [actor]
-    in [bd], and the member of [ids] that will do this challenging. If none of 
-    [ids] chooses to challenge then [any_challenge_block ids bd action actor] 
-    is (false,target).*)
 let any_challenge_block ids bd action actor=
   let rec blocks = function
     |[]->(false,actor)
