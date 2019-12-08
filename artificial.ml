@@ -4,7 +4,7 @@ type actions = Income | ForeignAid | Tax | Steal of string | Assassinate of stri
 let actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"; "Exchange"; "Coup"]
 let income_actions = ["Income"; "Foreign Aid"; "Tax"; "Steal"]
 let hostile_actions = ["Steal"; "Assassinate"]
-let random_nums = [0;1]
+let random_nums = [0;1;2]
 let basic_actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"]
 
 type t= {
@@ -74,13 +74,15 @@ let rec random_hostile ai=
 let new_ai player_id bd=
   let card_list =get_cards player_id bd in
   let facedown_cards= List.filter Deck.is_facedown card_list in
+  let players= List.filter (fun x -> x<>player_id) (player_names bd) in
+  let players= List.filter (is_alive bd) players in 
   {
     id= player_id;
     cards= facedown_cards;
     money= get_money bd player_id;
     personality= Random;
     board= bd;
-    players= List.filter (fun x -> x<>player_id) (player_names bd);
+    players= players;
   }
 
 (** [action ai] is the action that [ai] chooses to take.*)

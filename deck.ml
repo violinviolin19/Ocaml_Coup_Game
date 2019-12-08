@@ -24,13 +24,17 @@ let init_deck a =
            (Captain, Deck);(Captain, Deck);(Captain, Deck);
            (Ambassador, Deck);(Ambassador, Deck);(Ambassador, Deck)]
 
-(** [draw deck] gives the top card of the deck. *)
+(** [draw deck] fulfills the function of drawing a card by returning
+    a 2-tuple with the first element being the drawn card and the second
+    being the rest of the deck *)
 let draw deck = 
   match deck with 
   | [] -> failwith "This won't happen (draw failed)"
   | h :: t -> (h,t) 
 
-(** [draw deck] gives the first two cards of the deck. This is to be used 
+(** [draw deck] fulfills the function of drawing a card by returning 
+    a 3-tuple with the first two elements being the drawn cards and the
+    third element being the rest of the deck. This is to be used 
     when invoking the Ambassador's swap command. *)
 let draw2 deck =
   match deck with 
