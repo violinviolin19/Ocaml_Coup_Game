@@ -103,6 +103,9 @@ val get_player_id : player -> string
     Requires: [List.length card_list=2].*)
 val check_faceup : Deck.card list -> bool
 
+(**[is_alive player bd] is true if [player] is alive in [bd], false otherwise *)
+val is_alive : t->string-> bool
+
 (** [cards player_id bd] are the cards that [player_id] has face down in [bd].*)
 val cards : string -> t -> string
 
@@ -152,7 +155,20 @@ val can_block : string -> string -> t -> bool
 (** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
 val id_is_ai : string -> t -> bool
 
+(** [alive_players lst] is the players in [lst] that do not have two faceup
+    cards.*)
+val alive_players : player list -> player list
+
 (** [victory bd] is the pair of whether a player has won in [bd], and the id of 
     the player who won. If no player has won then the second member of the pair
     is the host id.*)
 val victory : t -> (bool*string)
+
+(** [draw_new bd players] is [bd] with [player] putting their [card] back into
+    the deck and drawing a new card to replace it. Requires: [player] is a 
+    player in [bd], and that [card] is a facedown card controlled by [player].*)
+val draw_new : t -> string -> string -> t
+
+(** [which_block bd player] is the card title [player] uses to block a steal in 
+    [bd]. Requires: [player] is able to block a steal in [bd]*)
+val which_block_steal : t -> string -> string
