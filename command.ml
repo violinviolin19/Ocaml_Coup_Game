@@ -16,12 +16,17 @@ exception Empty
 
 exception Malformed
 
-
+(* [make_word_list str] splits str into a list of its individual words, ignoring
+   whitespace or empty strings. *)
 let make_word_list str = 
   if String.trim str = "" then raise Empty 
   else String.split_on_char ' ' (String.trim str) |> 
        List.filter (fun str -> str <> "") 
 
+(* [parse str] gives a command associated with head of the list from 
+   [make_word_list str]. 
+   Raises an exception if the string is empty or doesn't match the correct 
+   structure, which is based individually on each instruction.  *)
 let parse str =
   let word_list = make_word_list str in 
   match word_list with 
@@ -41,6 +46,10 @@ let parse str =
       | _ -> raise Malformed
     end
 
+(* [parse_block str] either gives the Block command if the head of the list 
+   made by [make_word_list str] is "block" or it continues. 
+   Raises an exception if the head is empty or if the player types block 
+   followed by any other word. *)
 let parse_block str = 
   let word_list = make_word_list str in 
   match word_list with 

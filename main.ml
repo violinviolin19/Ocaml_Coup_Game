@@ -596,7 +596,8 @@ let rec play_game b =
               (* Only needed for syntatic reasons*)
               play_game b
           else
-            (print_endline (challenger_id^"successfully challenged your Tax");
+            (print_endline (challenger_id^"successfully challenged your 
+            Exchange");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
         else
@@ -936,6 +937,29 @@ let rec play_game b =
 let main ()=
   ANSITerminal.(print_string [blue]
                   "\n\nWelcome to Ocaml Coup!\n");
+  print_endline "This game involves power dynamics and gaining influence. Each 
+  player begins with two coins and two cards containing one of five possible 
+  characters. These characters include the Duke, Captain, Ambassador,
+  Assassin and Contessa. Each character has a different function. Normally, 
+  on your turn, you may take income (1 coin) or foreign aid (2 coins). The 
+  Duke allows you to take 3 coins by taxing. Captains can steal 2 coins from
+  any player. Ambassadors can exchange cards with the deck to gain new 
+  characters. Assassins can assassinate another player's card at the expense of 
+  3 coins, and Contessas can block an assassination. Players can also coup 
+  another player, which works like assassination but costs 7 coins- however, 
+  it is not blockable. 
+  The characters can also block different actions. Dukes can block another 
+  player from taking foreign aid, while both Captains and Ambassadors can block
+  another player trying to steal. 
+  Here's the catch. When you begin the game, everyone's cards are facedown, 
+  meaning that you can lie to your benefit. However, if you lie and you are 
+  challenged, you must turn a card faceup to indicate that it is out of play. 
+  You can also challenge other players, but be wary- if you are wrong, you must 
+  turn a card faceup as punishment. The game is over when all players but one 
+  have lost influence, meaning both their cards are faceup and out of play. 
+  Your possible commands include: 
+  income, foreign aid, tax, steal, exchange, assassinate, coup
+  Type 'quit' to quit the game.\n";
   print_endline "Press enter to Start\n";
   print_string  "> ";
   let deck = init_deck ""in 

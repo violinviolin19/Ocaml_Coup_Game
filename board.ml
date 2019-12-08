@@ -453,6 +453,12 @@ let draw_new bd player card=
   let new_board= replace_player player new_player bd in
   {new_board with current_deck=Deck.shuffle_in bd.current_deck card_t}
 
+let get_deck bd = 
+  bd.current_deck
+
+let switch_card bd player card = 
+  failwith "unimplemented"
+
 let which_block_steal bd player=
   let cards= get_cards player bd in
   let cards= List.filter Deck.is_facedown cards in
