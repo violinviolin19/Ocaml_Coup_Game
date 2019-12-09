@@ -174,4 +174,10 @@ val draw_new : t -> string -> string -> t
     [bd]. Requires: [player] is able to block a steal in [bd]*)
 val which_block_steal : t -> string -> string
 
+(** [change_dead bd deck] is [bd] with [deck] as its deck rather than the deck
+    it had.*)
 val change_deck : t -> Deck.t -> t
+
+(** [set_dead bd] is [bd] with any players of [bd] who have two faceup cards
+    set to be dead.*)
+val set_dead : t -> t

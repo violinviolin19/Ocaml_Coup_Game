@@ -72,17 +72,17 @@ let rec everyones_info_helper accu player_list bd =
       everyones_info_helper accu t bd
     else
       let card_names= h.id ^ "'s cards are: "^
-        Deck.get_name (h.card_one)^" and "^Deck.get_name (h.card_two) in
+                      Deck.get_name (h.card_one)^" and "^Deck.get_name (h.card_two) in
       let card1_info= ". "^ h.id ^ " has a "^Deck.get_name h.card_one^" "
                       ^Deck.get_status h.card_one in
       let card2_info= " and a "^Deck.get_name h.card_two^" "
                       ^Deck.get_status h.card_two in
       let money_info= ". "^ h.id ^" has "^ string_of_int h.money ^ 
-        " coins. " in
+                      " coins. " in
       let status= h.id ^" is "^ (if(h.alive) then "" else "not ")^
-        "alive." in
+                  "alive." in
       let player_info = card_names^card1_info^card2_info^money_info^
-        status^"\n" in
+                        status^"\n" in
       everyones_info_helper (accu ^ "\n"^ player_info) t bd
 
 (** [everyones_info bd] returns a string that is meant to be printed during 
@@ -475,3 +475,12 @@ let which_block_steal bd player=
 
 let change_deck bd deck = 
   {bd with current_deck = deck}
+
+let set_dead bd=
+  let rec cycle_players = function
+    |[]->[]
+    |h::t when is_alive bd h.id -> h::cycle_players t
+    |h::t-> begin
+        let dead_player= {h with alive=false} in
+        dead_player::cycle_players t end in
+  {bd with current_players= cycle_players bd.current_players}
