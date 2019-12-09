@@ -1,4 +1,3 @@
-
 (* type deck = Deck of Deck.t | Not_deck *)
 exception InvalidPlayer of string
 exception InvalidCard of string
@@ -112,7 +111,7 @@ val cards : string -> t -> string
 (** [check_pool bd] is the amount of money avalaible in the center in [bd].*)
 val check_pool : t->int
 
-(** player_names bd] is a list of the string representations(names or ids) of 
+(** [player_names bd] is a list of the string representations(names or ids) of 
     the players of [bd].*)
 val player_names : t -> string list
 
@@ -155,6 +154,8 @@ val can_block : string -> string -> t -> bool
 (** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
 val id_is_ai : string -> t -> bool
 
+
+val get_deck: t -> Deck.t
 (** [alive_players lst] is the players in [lst] that do not have two faceup
     cards.*)
 val alive_players : player list -> player list
