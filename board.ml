@@ -407,34 +407,11 @@ let can_block actor_name action_name bd =
 
 (* ---------------- Block commands begin here ----------------- *)
 
-let get_last_action bd = 
-  bd.last_action
-
-let set_last_action bd s = 
-  {bd with last_action = s}
-
 let make_player_lie bd = 
   let curr_player = 
     current_player bd in
   replace_player (current_player_id bd) {curr_player with telling_truth = false}
     bd
-
-let block_duke bd = 
-  if bd.last_action = "foreign aid" then bd else make_player_lie bd
-
-let block_cap_amb bd = 
-  if bd.last_action = "steal" then bd else make_player_lie bd
-
-let block_contessa bd = 
-  if bd.last_action = "assasinate" then bd else make_player_lie bd
-
-let block bd character= 
-  match character with 
-  |"duke" -> Legal (block_duke bd)
-  |"captain"-> Legal (block_cap_amb bd)
-  |"ambassador" -> Legal (block_cap_amb bd)
-  |"contessa" -> Legal (block_contessa bd) 
-  |_ -> Illegal
 
 let rec alive_players = function
   |[]->[]

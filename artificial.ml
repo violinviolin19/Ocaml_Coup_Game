@@ -1,5 +1,5 @@
 open Board
-type mood = Random | Other
+type mood = Random | Aggro | Other
 type actions = Income | ForeignAid | Tax | Steal of string 
              | Assassinate of string | Coup of string | Exchange
 let actions = 
@@ -96,18 +96,18 @@ let action ai=
   if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
     Assassinate (random_elt ai.players)
 
+let aggro_action ai=
+  if(check_pool ai.board>3&&ai.money<3) then random_income ai else
+  if(check_pool ai.board<3&&ai.money<3) then Steal (random_elt ai.players) else
+  if(ai.money>7) then Coup (random_elt ai.players) else
+  if(check_pool ai.board>3&&ai.money>2) then random_hostile ai else
+  if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
+    Assassinate (random_elt ai.players)
+
 let turn player_id bd=
   let ai= new_ai player_id bd in
-  action ai
-
-(*
-let action_to_string action =
-  match action with
-  |Income->"Income"
-  |ForeignAid->"Foreign Aid"
-  |Tax->"Tax"
-  |Steal target ->"Steal "^target
-  *)
+  if(ai.personality=Random) then action ai
+  else(*if(ai.personality=Aggro)*) aggro_action ai
 
 (** [should_challenge ai_id action target bd] is true if the ai identified by
     [ai_id] will challenge the [action] directed towards [target] in [bd]. 
