@@ -464,3 +464,6 @@ let which_block_steal bd player=
   let cards= List.filter Deck.is_facedown cards in
   let cards= List.map Deck.get_name cards in
   if(List.mem "Ambassador" cards) then "Ambassador" else "Captain"
+
+let change_deck bd deck = 
+  {bd with current_deck = deck}

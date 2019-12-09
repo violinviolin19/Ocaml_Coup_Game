@@ -173,3 +173,5 @@ val draw_new : t -> string -> string -> t
 (** [which_block bd player] is the card title [player] uses to block a steal in 
     [bd]. Requires: [player] is able to block a steal in [bd]*)
 val which_block_steal : t -> string -> string
+
+val change_deck : t -> Deck.t -> t

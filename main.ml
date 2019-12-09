@@ -5,6 +5,8 @@ open Artificial
 
 exception SelfTarget
 
+(** [choose_num_players] is the number of players in the game including the 
+    human player. *)
 let rec choose_num_players () = 
   print_endline "How many players do you want? Choose from 2-5.\n";
   print_string  "> ";
@@ -600,16 +602,18 @@ let rec play_game b =
                 (snd cards) discards in
             if new_b != Illegal then
               let legal_item = extract_legal (new_b) in
+              let shuffled_deck = shuffle (get_deck legal_item) in 
+              let new_legal_item = change_deck legal_item shuffled_deck in
               print_endline (current_player_id b ^
                              " exchanges with the court deck. \n");
               print_string "\n> ";
-              play_game (next_turn legal_item)
+              play_game (next_turn new_legal_item)
             else 
               (* Only needed for syntatic reasons*)
               play_game b
           else
-            (print_endline (challenger_id^"successfully challenged your 
-            Exchange");
+            (print_endline (challenger_id^
+                            "successfully challenged your Exchange. \n");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
         else
@@ -622,10 +626,12 @@ let rec play_game b =
               discards in
           if new_b != Illegal then
             let legal_item = extract_legal (new_b) in
+            let shuffled_deck = shuffle (get_deck legal_item) in 
+            let new_legal_item = change_deck legal_item shuffled_deck in
             print_endline (current_player_id b ^
                            " exchanges with the court deck. \n");
             print_string "\n> ";
-            play_game (next_turn legal_item)
+            play_game (next_turn new_legal_item)
           else 
             (* Only needed for syntatic reasons*)
             play_game b
