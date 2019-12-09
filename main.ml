@@ -4,6 +4,18 @@ open Board
 open Artificial
 
 exception SelfTarget
+
+let rec choose_num_players () = 
+  print_endline "How many players do you want? Choose from 2-5.\n";
+  print_string  "> ";
+  match read_line () with 
+  |"2" -> 2
+  |"3" -> 3
+  | "4" -> 4
+  | "5" -> 5
+  | _ -> print_string "That's not a valid option.\n"; choose_num_players ()
+
+
 (** [choose_card bd] is the facedown card of [player] that they choose in [bd]*)
 let rec choose_card bd player : string=
   let cards= cards player bd in
@@ -960,10 +972,11 @@ let main ()=
   Your possible commands include: 
   income, foreign aid, tax, steal, exchange, assassinate, coup
   Type 'quit' to quit the game.\n";
-  print_endline "Press enter to Start\n";
-  print_string  "> ";
   let deck = init_deck ""in 
-  let board = init_board deck 3 in
+  let num_players = choose_num_players () in 
+  let board = init_board deck num_players in
+  print_endline "Are you ready to play? Press enter to start.\n";
+  print_string  "> ";
   match read_line () with
   | _ -> play_game board (*fix later*)
 
