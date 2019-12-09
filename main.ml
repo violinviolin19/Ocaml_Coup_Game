@@ -586,8 +586,8 @@ let rec play_game b =
     (* end code to process ai1's command *)
     (*play_game(next_turn b)*)
   else
-    print_string(everyones_info b ^ "\n"); (* is debugging info at the moment, 
-                                              call everyones_info_hidden instead when we are ready*)
+    print_string(everyones_info_hidden b ^ "\n"); (* is debugging info at the moment, 
+                                                     call everyones_info_hidden instead when we are ready*)
   print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0

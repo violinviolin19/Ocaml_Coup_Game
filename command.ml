@@ -16,8 +16,8 @@ exception Empty
 
 exception Malformed
 
-(* [make_word_list str] splits str into a list of its individual words, ignoring
-   whitespace or empty strings. *)
+(** [make_word_list str] splits str into a list of its individual words, ignoring
+    whitespace or empty strings. *)
 let make_word_list str = 
   if String.trim str = "" then raise Empty 
   else String.split_on_char ' ' (String.trim str) |> 
