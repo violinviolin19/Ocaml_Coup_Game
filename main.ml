@@ -103,10 +103,12 @@ let rec player_challenge b action actor target=
 let rec player_block b action actor = 
   print_string ("Would you like to block "^actor^"'s "^action^"? 
   Either type block or continue. \n"); 
-  match parse_block (String.lowercase_ascii (read_line())) with 
-  | Continue -> false
-  | Block -> true
-  | _ -> failwith "unimplemented"
+  try (match parse_block (String.lowercase_ascii (read_line())) with 
+      | Continue -> false
+      | Block -> true
+      | _ -> failwith "won't happen")
+  with Malformed -> print_string "Not a valid choice.\n"; player_block b action
+      actor
 
 
 (** [player_challenge_block action actor] is true if the player would like to
