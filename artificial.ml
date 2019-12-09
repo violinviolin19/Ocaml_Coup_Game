@@ -163,7 +163,7 @@ let should_any_challenge ids bd action target=
   let ids= List.filter (is_alive bd) ids in
   challenges ids
 
-(** should_challenge_block id action actor bd] is true if the 
+(** [should_challenge_block id action actor bd] is true if the 
     non-player-controlled [id] will challenge the block to [actor]'s choice to
     [action] in [bd].*)
 let should_challenge_block id action actor bd=
