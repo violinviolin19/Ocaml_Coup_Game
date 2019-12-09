@@ -102,10 +102,12 @@ let rec player_challenge b action actor target=
 let rec player_block b action actor = 
   print_string ("Would you like to block "^actor^"'s "^action^"? 
   Either type block or continue. \n"); 
-  match parse_block (String.lowercase_ascii (read_line())) with 
-  | Continue -> false
-  | Block -> true
-  | _ -> failwith "unimplemented"
+  try (match parse_block (String.lowercase_ascii (read_line())) with 
+      | Continue -> false
+      | Block -> true
+      | _ -> failwith "won't happen")
+  with Malformed -> print_string "Not a valid choice.\n"; player_block b action
+      actor
 
 
 (** [player_challenge_block action actor] is true if the player would like to
@@ -442,8 +444,8 @@ let rec play_game b =
       let block_challenge= any_challenge_block non_host_players b "Assassinate" 
           curr_id in
       print_endline (current_player_id b ^ " tries to assassinate "^killed_id);
-      let player_block= player_block b "Assassinate" (current_player_id b)||
-                        fst ai_blocker in
+      let player_block= 
+        killed_id=host_id&&player_block b "Assassinate"(current_player_id b) in
       let blocker= if(player_block||fst ai_blocker) then
           (if player_block then (true,host_id) else (true,snd ai_blocker)) 
         else (false,host_id) in
@@ -459,17 +461,20 @@ let rec play_game b =
               "Assassinate" b in
           let board= fst challenge_st in
           if(snd challenge_st) then
-            let card= if(killed_id=host_id) then choose_card board host_id else
-                Deck.get_name (Board.find_facedown killed_id board) in
-            let new_b= assassinate (current_player_id b) killed_id board card in 
-            if new_b != Illegal then
-              let legal_item = extract_legal new_b in
-              print_endline (current_player_id b ^ " assassinates "^
-                             killed_id^"'s "^card);
-              print_string "\n> ";
-              play_game (next_turn legal_item) 
-            else 
-              play_game board
+            if(is_alive board killed_id) then
+              let card= if(killed_id=host_id)then choose_card board host_id else
+                  Deck.get_name (Board.find_facedown killed_id board) in
+              let new_b=assassinate(current_player_id b) killed_id board card in 
+              if new_b != Illegal then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " assassinates "^
+                               killed_id^"'s "^card);
+                print_string "\n> ";
+                play_game (next_turn legal_item) 
+              else 
+                play_game board
+            else
+              play_game (next_turn board)
           else
             (print_endline (killed_id^" blocked the assassination."); 
              let new_card= Board.draw_new board killed_id "Contessa" in
@@ -493,20 +498,23 @@ let rec play_game b =
               ("You have failed in your challenge, now you must turnover "^
                card_choice ^ "\n") ;
             let turnover= turnover_card host_id b card_choice in
-            let card= if(killed_id=host_id) then choose_card turnover host_id 
-              else Deck.get_name (Board.find_facedown killed_id turnover) in
-            let new_b= assassinate (current_player_id turnover) killed_id 
-                turnover card in 
-            if new_b != Illegal then
-              let legal_item = extract_legal new_b in
-              print_endline (current_player_id b ^ " assassinates "^killed_id
-                             ^"'s "^card);
-              print_string "\n> ";
-              let new_card= Board.draw_new legal_item curr_id "Assassin" in
-              play_game (next_turn new_card) 
-            else 
-              (* Impossible case, only here for syntatic reasons*)
-              play_game b
+            if(is_alive turnover killed_id) then
+              let card= if(killed_id=host_id) then choose_card turnover host_id 
+                else Deck.get_name (Board.find_facedown killed_id turnover) in
+              let new_b= assassinate (current_player_id turnover) killed_id 
+                  turnover card in 
+              if new_b != Illegal then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " assassinates "^killed_id
+                               ^"'s "^card);
+                print_string "\n> ";
+                let new_card= Board.draw_new legal_item curr_id "Assassin" in
+                play_game (next_turn new_card) 
+              else 
+                (* Impossible case, only here for syntatic reasons*)
+                play_game b
+            else
+              play_game (next_turn turnover)
           else
             let card_choice= Deck.get_name (Board.find_facedown curr_id b) in
             print_string("You were right! "^curr_id^" turns over their "^
@@ -533,17 +541,22 @@ let rec play_game b =
               (challenger_id^" challenged "^curr_id^
                "'s assassination unsuccessfully, they turned over their "
                ^card_choice);
-            let card= Deck.get_name (Board.find_facedown killed_id b) in
-            let new_b= assassinate (current_player_id b) killed_id b card in 
-            if new_b != Illegal then
-              let legal_item = extract_legal new_b in
-              print_endline (current_player_id b ^ " assassinates "
-                             ^killed_id^"'s "^card);
-              print_string "\n> ";
-              let new_card= Board.draw_new legal_item killed_id "Assassin" in
-              play_game (next_turn new_card) 
-            else 
-              play_game b
+            let turned= turnover_card challenger_id b card_choice in
+            if(is_alive turned killed_id) then
+              let card= Deck.get_name (Board.find_facedown killed_id turned) in
+              let new_b= assassinate (current_player_id b) killed_id turned card
+              in 
+              if new_b != Illegal then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " assassinates "
+                               ^killed_id^"'s "^card);
+                print_string "\n> ";
+                let new_card= Board.draw_new legal_item killed_id "Assassin" in
+                play_game (next_turn new_card) 
+              else 
+                play_game b
+            else
+              play_game (next_turn turned)
           else
             (print_endline (challenger_id^"successfully challenged"^
                             curr_id^"'s assassination");
@@ -822,7 +835,7 @@ let rec play_game b =
              card_choice);
           let new_b = extract_legal (tax (current_player_id b) b) in
           let new_card= Board.draw_new new_b host_id "Duke" in
-          play_game (next_turn(turnover_card challenger_id new_card card_choice))
+          play_game(next_turn(turnover_card challenger_id new_card card_choice))
         else
           (print_endline (challenger_id^"successfully challenged your Tax");
            let card_choice = choose_card b curr_id in
@@ -845,17 +858,20 @@ let rec play_game b =
                   "Assassinate" b in 
               let new_b= fst challenge_st in
               if(snd challenge_st) then
-                let card= Deck.get_name (Board.find_facedown killed_id new_b) in
-                let new_b= assassinate 
-                    (current_player_id b) killed_id new_b card in 
-                if new_b != Illegal then
-                  let legal_item = extract_legal new_b in
-                  print_endline (current_player_id b ^ " assassinates "^
-                                 killed_id^"'s "^card);
-                  print_string "\n> ";
-                  play_game (next_turn legal_item) 
-                else 
-                  play_game b
+                if(is_alive new_b killed_id) then
+                  let card= Deck.get_name(Board.find_facedown killed_id new_b)in
+                  let new_b= assassinate 
+                      (current_player_id b) killed_id new_b card in 
+                  if new_b != Illegal then
+                    let legal_item = extract_legal new_b in
+                    print_endline (current_player_id b ^ " assassinates "^
+                                   killed_id^"'s "^card);
+                    print_string "\n> ";
+                    play_game (next_turn legal_item) 
+                  else 
+                    play_game b
+                else
+                  play_game (next_turn new_b)
               else
                 let new_card= Board.draw_new new_b killed_id "Contessa" in
                 (if (can_block killed_id "Assassination" b) then 
@@ -888,17 +904,22 @@ let rec play_game b =
               (challenger_id^
                " challenged your assassination unsuccessfully" ^ ", " ^
                "they turned over their "^card_choice);
-            let card= Deck.get_name (Board.find_facedown killed_id b) in
-            let new_b= Board.draw_new b host_id "Assassin" in
-            let new_b= assassinate (current_player_id b) killed_id new_b card in 
-            if new_b != Illegal then
-              let legal_item = extract_legal new_b in
-              print_endline (current_player_id b ^ " assassinates "^
-                             killed_id^"'s "^card);
-              print_string "\n> ";
-              play_game (next_turn legal_item) 
-            else 
-              play_game b
+            let card_over = turnover_card challenger_id b card_choice in
+            if(is_alive card_over killed_id) then
+              let card= Deck.get_name(Board.find_facedown killed_id card_over)in
+              let new_b= Board.draw_new card_over host_id "Assassin" in
+              let new_b= assassinate(current_player_id b)killed_id new_b card in 
+              if new_b != Illegal then
+                let legal_item = extract_legal new_b in
+                print_endline (current_player_id b ^ " assassinates "^
+                               killed_id^"'s "^card);
+                print_string "\n> ";
+                play_game (next_turn legal_item) 
+              else 
+                play_game b
+            else
+              let new_b= Board.draw_new card_over host_id "Assassin" in
+              play_game(next_turn new_b)
           else
             (print_endline (challenger_id^
                             "successfully challenged your assassination");

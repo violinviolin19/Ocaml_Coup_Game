@@ -51,5 +51,6 @@ let parse_block str =
   | h::t -> begin
       match h with 
       | "block" -> if t=[] then Block else raise Malformed
-      | _ -> Continue
+      | "continue" -> Continue
+      | _ -> raise Malformed
     end
