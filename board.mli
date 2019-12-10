@@ -136,14 +136,14 @@ val view_four : string -> t -> (Deck.card list * Deck.t)
     [bd] after [exchanger_id] exchanges their cards for [card1] and [card2],
     and has chosen to discard [discards] back into [deck] in [bd], or an
     illegal result if an exception is raised in execution.*)
-val exchange : string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
+val exchange : 
+  string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
 
 (** [has_both player_id bd] is true if [player_id] has no faceup cards in [bd].
     Raises an InvalidPlayer exception if [player_id] is not a player in [bd].*)
 val has_both : string -> t -> bool
 
-val block : t -> string -> result
-
+(** [make_player_lie bd] is [bd] after the current player of [bd] has lied*)
 val make_player_lie : t -> t
 
 (** [can_block actor_name action_name bd] is true if [actor_name] is able to
@@ -153,7 +153,6 @@ val can_block : string -> string -> t -> bool
 
 (** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
 val id_is_ai : string -> t -> bool
-
 
 val get_deck: t -> Deck.t
 (** [alive_players lst] is the players in [lst] that do not have two faceup
@@ -173,3 +172,11 @@ val draw_new : t -> string -> string -> t
 (** [which_block bd player] is the card title [player] uses to block a steal in 
     [bd]. Requires: [player] is able to block a steal in [bd]*)
 val which_block_steal : t -> string -> string
+
+(** [change_dead bd deck] is [bd] with [deck] as its deck rather than the deck
+    it had.*)
+val change_deck : t -> Deck.t -> t
+
+(** [set_dead bd] is [bd] with any players of [bd] who have two faceup cards
+    set to be dead.*)
+val set_dead : t -> t
