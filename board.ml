@@ -142,6 +142,10 @@ let is_ai player= player.ai
 
 let id_is_ai id b= is_ai (find_player id b)
 
+(** [deal_pair deck] takes a 2-tuple of a 2 item Deck.card list 
+    and a Deck.t to return it in the form of a 2-tuple of a 2-tuple
+    and a Deck.t. This is intended to take the output of draw2 and return it
+    as a tuple form. *)
 let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
   (*call a function that deals a card twice, and return a tuple with a card 
     tuple and a deck *)
