@@ -85,10 +85,6 @@ let rec everyones_info_helper accu player_list bd =
                         status^"\n" in
       everyones_info_helper (accu ^ "\n"^ player_info) t bd
 
-(** [everyones_info bd] returns a string that is meant to be printed during 
-    gameplay to display the information of all the players. Logic is in
-    [everyones_info_helper accu player_list bd] because when called in main.ml
-    the current players are not public.*)
 let everyones_info bd =
   everyones_info_helper "" bd.current_players bd
 
@@ -120,10 +116,6 @@ let rec everyones_info_hidden_helper accu player_list bd =
                         money_info ^ status^"\n" in
       everyones_info_hidden_helper (accu ^ "\n"^ player_info) t bd
 
-(** [everyones_info_hidden bd] has mostly the same function as everyone's info
-    but will instead keep the card types of noncurrent players hidden. This is
-    necessary to play the game as intended. [everyones_info bd] should not be
-    used in the final release.*)
 let everyones_info_hidden bd =
   everyones_info_hidden_helper "" bd.current_players bd
 

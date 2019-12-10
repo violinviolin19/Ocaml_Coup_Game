@@ -21,8 +21,15 @@ val current_player: t->player
     is in [bd].*)
 val current_player_id: t -> string
 
+(** [everyones_info bd] is a string that is meant to be printed during 
+    gameplay to display the information of all the players of [bd]. Logic is in
+    [everyones_info_helper accu player_list bd] because when called in main.ml
+    the current players are not public.*)
 val everyones_info: t-> string
 
+(** [everyones_info_hidden bd] is [everyones_info bd] but will instead keep the 
+    card types of noncurrent players hidden. This is necessary to play the game 
+    as intended. [everyones_info bd] should not be used in the final release.*)
 val everyones_info_hidden : t-> string
 
 (** [turn_info player bd] is the relevant information [player] will be given

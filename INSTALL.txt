@@ -9,7 +9,4 @@ be needed.
 
 4) Then type "make play" to play the game
 
-5) When prompted you can press any key to start the game
-
-Note: commands include steal, income, tax, foreign aid, exchange, assassinate, and
-coup
+5) Follow the instructions given to you by the terminal

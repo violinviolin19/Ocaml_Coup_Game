@@ -1,0 +1,21 @@
+Our project has exceeded the 'required' number of lines of code by hundreds of
+lines, but there are some spots in our system that may seem like dead code,
+since they don't seem to 'do' anything, but they are really just artifacts from
+our first ideas of how to implement certain aspects of the system. These sections
+of code, even though they go unused, were crucial in our process and may end up
+being used in the future if any of choose to expand/change our project. One of 
+these places is in some of the code involving blocking. When we first began to
+write up blocking we had planned to implement it over two 'cycles' of the
+play_game function in main.ml. We eventually decided against this, since keeping
+play_game as a function consistently corresponding to one entire turn of our game
+felt like it would make more sense, but we still kept some of this dead code in
+our system as an insurance policy incase we wanted to try switching back to that
+implementation if something goes wrong with what is now our current implementation,
+or if we wished to alter this implementation after the project is over. Similarly,
+some helper functions were written in board.ml that are used minimally. This is
+merely an oversight on the programmers' part rather than an intentional way to
+inflate our code count. The currently unused method for printing, everyones_info,
+was our first implementation for printing our turn info of non-player characters, and
+was neccessary for testing, since it exposed to a debugger play-testing the game which  
+cards an ai actually had. Overall, even with this superfluous code, we still should
+have over 1500 lines of code.
