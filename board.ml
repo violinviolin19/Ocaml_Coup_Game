@@ -341,7 +341,6 @@ let view_four exchanger_id bd=
   (card1 :: card2 :: player_cards, snd pair)
 
 let exchange exchanger_id bd card1 card2 deck discards=
-  (* Rewritten List.map so that first arg is what is in the list*)
   let rec set_deck lst=
     match lst with
     |[]->[]
@@ -387,8 +386,8 @@ let tax player_name bd =
 
 let extract_legal b = match b with
   | Legal i -> i
-  | _ -> { (*place holder board because other results should never be used*)
-      current_deck = []; (*init deck does not exist yet*)
+  | _ -> { 
+      current_deck = []; 
       current_players = [];
       turn_order = [];
       turn = 0;
@@ -412,9 +411,6 @@ let can_block actor_name action_name bd =
   match action_name with
   |s when List.mem (String.capitalize_ascii s) actions -> true
   |_ -> false
-
-
-(* ---------------- Block commands begin here ----------------- *)
 
 let make_player_lie bd = 
   let curr_player = 
@@ -444,7 +440,7 @@ let draw_new bd player card=
     else
       {old_player with card_two=Deck.set_status (fst new_card) Deck.FaceDown}
   end in
-  if old_player.id = "host" then 
+  if old_player.id = "host" && bd.mode = "normal" then 
     print_string ("Host, your new cards are " 
                   ^ Deck.get_name (new_player.card_one) 
                   ^ " and " ^ Deck.get_name (new_player.card_two) ^ "\n"); 

@@ -188,6 +188,9 @@ val change_deck : t -> Deck.t -> t
     set to be dead.*)
 val set_dead : t -> t
 
+(** [turn_info_hidden player] is the information the human player will see about
+    themselves on hard mode, which prevents them from being able to see their 
+    cards. *)
 val turn_info_hidden : player -> string
 
 val get_mode : t -> string

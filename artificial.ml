@@ -1,5 +1,5 @@
 open Board
-type mood = Random | Aggro | Other
+type mood = Random | Aggro | Money 
 type actions = Income | ForeignAid | Tax | Steal of string 
              | Assassinate of string | Coup of string | Exchange
 let actions = 
@@ -8,6 +8,8 @@ let income_actions = ["Income"; "Foreign Aid"; "Tax"; "Steal"]
 let hostile_actions = ["Steal"; "Assassinate"]
 let random_nums = [0;1;2]
 let basic_actions = ["Income"; "Foreign Aid"; "Tax"; "Assassinate"; "Steal"]
+let personalities = ["Random"; "Aggro"; "Money"]
+
 
 type t= {
   id: string;
@@ -25,6 +27,15 @@ let random_elt action_lst=
   let elt= Random.int(List.length action_lst) in
   List.nth action_lst elt
 
+
+(** [random_personality lst] is the random personality the AI will get depending
+    on which personality is randomly selected from the possible personalities.*)
+let random_personality lst = 
+  match random_elt lst with 
+  | "Random" -> Random 
+  | "Aggro" -> Aggro 
+  | "Money" -> Money
+  | _ -> failwith "not gonna happen"
 (** [can_steal ai] is true if [ai] is able to steal from another player.*)
 let can_steal ai=
   let moneys= List.map (get_money ai.board) ai.players in
@@ -82,12 +93,13 @@ let new_ai player_id bd=
     id= player_id;
     cards= facedown_cards;
     money= get_money bd player_id;
-    personality= Random;
+    personality= random_personality personalities;
     board= bd;
     players= players;
   }
 
-(** [action ai] is the action that [ai] chooses to take.*)
+(** [action ai] is the action that [ai] chooses to take if it has a Random 
+    personality.*)
 let action ai=
   if(check_pool ai.board>3&&ai.money<3) then random_income ai else
   if(check_pool ai.board<3&&ai.money<3) then Steal (random_elt ai.players) else
@@ -96,6 +108,8 @@ let action ai=
   if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
     Assassinate (random_elt ai.players)
 
+(** [aggro_action ai] is the action that [ai] chooses to take if it has an Aggro
+    personality.*)
 let aggro_action ai=
   if(check_pool ai.board>3&&ai.money<3) then random_income ai else
   if(check_pool ai.board<3&&ai.money<3) then Steal (random_elt ai.players) else
@@ -104,10 +118,22 @@ let aggro_action ai=
   if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
     Assassinate (random_elt ai.players)
 
+(** [money_action ai] is the action that [ai] chooses to take if it has a Money
+    personality.*)
+let money_action ai=
+  if(check_pool ai.board>3&&ai.money<3) then random_income ai else
+  if(check_pool ai.board<3&&ai.money<3) then Steal (random_elt ai.players) else
+  if(ai.money>7) then Coup (random_elt ai.players) else
+  if(check_pool ai.board>3&&ai.money>2) then random_income ai else
+  if(check_pool ai.board<4&&ai.money>3) then random_hostile ai else
+    Assassinate (random_elt ai.players)
+
 let turn player_id bd=
   let ai= new_ai player_id bd in
-  if(ai.personality=Random) then action ai
-  else(*if(ai.personality=Aggro)*) aggro_action ai
+  match ai.personality with 
+  | Random -> action ai 
+  | Aggro -> aggro_action ai 
+  | Money -> money_action ai
 
 (** [should_challenge ai_id action target bd] is true if the ai identified by
     [ai_id] will challenge the [action] directed towards [target] in [bd]. 
