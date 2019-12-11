@@ -21,8 +21,15 @@ val current_player: t->player
     is in [bd].*)
 val current_player_id: t -> string
 
+(** [everyones_info bd] is a string that is meant to be printed during 
+    gameplay to display the information of all the players of [bd]. Logic is in
+    [everyones_info_helper accu player_list bd] because when called in main.ml
+    the current players are not public.*)
 val everyones_info: t-> string
 
+(** [everyones_info_hidden bd] is [everyones_info bd] but will instead keep the 
+    card types of noncurrent players hidden. This is necessary to play the game 
+    as intended. [everyones_info bd] should not be used in the final release.*)
 val everyones_info_hidden : t-> string
 
 (** [turn_info player bd] is the relevant information [player] will be given
@@ -35,7 +42,7 @@ val is_ai : player -> bool
 
 (** [init_board deck num_players] is the first game state of a game generated
     with [deck] and a [num_players] number of players.*)
-val init_board : Deck.t-> int-> t
+val init_board : Deck.t-> int-> string -> t
 
 (** [check_bank player_id int bd] is true iff the player with id of [player_id]
     in [bd] has at least [cash] coins.*)
@@ -136,14 +143,14 @@ val view_four : string -> t -> (Deck.card list * Deck.t)
     [bd] after [exchanger_id] exchanges their cards for [card1] and [card2],
     and has chosen to discard [discards] back into [deck] in [bd], or an
     illegal result if an exception is raised in execution.*)
-val exchange : string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
+val exchange : 
+  string -> t -> Deck.card -> Deck.card -> Deck.t -> (Deck.card list) -> result
 
 (** [has_both player_id bd] is true if [player_id] has no faceup cards in [bd].
     Raises an InvalidPlayer exception if [player_id] is not a player in [bd].*)
 val has_both : string -> t -> bool
 
-val block : t -> string -> result
-
+(** [make_player_lie bd] is [bd] after the current player of [bd] has lied*)
 val make_player_lie : t -> t
 
 (** [can_block actor_name action_name bd] is true if [actor_name] is able to
@@ -153,7 +160,6 @@ val can_block : string -> string -> t -> bool
 
 (** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
 val id_is_ai : string -> t -> bool
-
 
 val get_deck: t -> Deck.t
 (** [alive_players lst] is the players in [lst] that do not have two faceup
@@ -174,4 +180,14 @@ val draw_new : t -> string -> string -> t
     [bd]. Requires: [player] is able to block a steal in [bd]*)
 val which_block_steal : t -> string -> string
 
+(** [change_dead bd deck] is [bd] with [deck] as its deck rather than the deck
+    it had.*)
 val change_deck : t -> Deck.t -> t
+
+(** [set_dead bd] is [bd] with any players of [bd] who have two faceup cards
+    set to be dead.*)
+val set_dead : t -> t
+
+val turn_info_hidden : player -> string
+
+val get_mode : t -> string

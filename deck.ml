@@ -89,4 +89,3 @@ let name_to_card card_id =
   |"captain"-> Captain
   |"ambassador"-> Ambassador
   |_->raise(InvalidCard card)
-

@@ -19,6 +19,7 @@ type t = {
   turn: int;
   money_pool: int;
   last_action: string;
+  mode: string;
 }
 
 
@@ -85,12 +86,31 @@ let rec everyones_info_helper accu player_list bd =
                         status^"\n" in
       everyones_info_helper (accu ^ "\n"^ player_info) t bd
 
-(** [everyones_info bd] returns a string that is meant to be printed during 
-    gameplay to display the information of all the players. Logic is in
-    [everyones_info_helper accu player_list bd] because when called in main.ml
-    the current players are not public.*)
 let everyones_info bd =
   everyones_info_helper "" bd.current_players bd
+
+
+let turn_info_hidden player = 
+  let card1_stat = Deck.get_status player.card_one in
+  let card1_id = 
+    if (card1_stat = "out of play") then 
+      Deck.get_name player.card_one ^ " " ^
+      Deck.get_status player.card_one ^ ", "
+    else
+      "Facedown card in play, " in
+  let card2_stat = Deck.get_status player.card_two in
+  let card2_id = 
+    if (card2_stat = "out of play") then
+      Deck.get_name player.card_two ^ " " ^ Deck.get_status player.card_two
+    else
+      "Facedown card in play" in
+  let money_info= ". "^ player.id ^" has "^
+                  string_of_int player.money ^ " coins. " in
+  let status= player.id ^" is "^
+              (if(player.alive) then "" else "not ")^"alive." in
+  player.id ^ " has: "  ^ card1_id ^ card2_id ^ 
+  money_info ^ status^"\n"
+
 
 (** [everyones_info_hidden_helper accu player_list bd] has almost the same 
     function as [everyones_info_helper accu player_list bd] but instead of 
@@ -102,32 +122,13 @@ let rec everyones_info_hidden_helper accu player_list bd =
     if h.id = "host" then
       everyones_info_hidden_helper accu t bd
     else
-      let card1_stat = Deck.get_status h.card_one in
-      let card1_id = 
-        if (card1_stat = "out of play") then 
-          Deck.get_name h.card_one ^ " " ^ Deck.get_status h.card_one ^ ", "
-        else
-          "Facedown card in play, " in
-      let card2_stat = Deck.get_status h.card_two in
-      let card2_id = 
-        if (card2_stat = "out of play") then
-          Deck.get_name h.card_two ^ " " ^ Deck.get_status h.card_two
-        else
-          "Facedown card in play" in
-      let money_info= ". "^ h.id ^" has "^ string_of_int h.money ^ " coins. " in
-      let status= h.id ^" is "^ (if(h.alive) then "" else "not ")^"alive." in
-      let player_info = h.id ^ " has: "  ^ card1_id ^ card2_id ^ 
-                        money_info ^ status^"\n" in
+      let player_info = turn_info_hidden h in 
       everyones_info_hidden_helper (accu ^ "\n"^ player_info) t bd
 
-(** [everyones_info_hidden bd] has mostly the same function as everyone's info
-    but will instead keep the card types of noncurrent players hidden. This is
-    necessary to play the game as intended. [everyones_info bd] should not be
-    used in the final release.*)
 let everyones_info_hidden bd =
   everyones_info_hidden_helper "" bd.current_players bd
 
-let turn_info player bd=
+let turn_info player bd =
   let card_names="Your cards are: "^Deck.get_name (player.card_one)^" and "^
                  Deck.get_name (player.card_two) in
   let card1_info= ". You have a "^Deck.get_name player.card_one^" "
@@ -138,10 +139,16 @@ let turn_info player bd=
   let status= "You are "^ (if(player.alive) then "" else "not ")^"alive." in
   card_names^card1_info^card2_info^money_info^status^"\n"
 
+
+
 let is_ai player= player.ai
 
 let id_is_ai id b= is_ai (find_player id b)
 
+(** [deal_pair deck] takes a 2-tuple of a 2 item Deck.card list 
+    and a Deck.t to return it in the form of a 2-tuple of a 2-tuple
+    and a Deck.t. This is intended to take the output of draw2 and return it
+    as a tuple form. *)
 let deal_pair deck : ((Deck.card*Deck.card)*Deck.t)=
   (*call a function that deals a card twice, and return a tuple with a card 
     tuple and a deck *)
@@ -192,7 +199,7 @@ let generate_player_lst deck num_players =
 let get_player_id player = 
   player.id
 
-let init_board deck num_players =
+let init_board deck num_players mode=
   let rec assign_turns turn=function
     |[]->[]
     |h::t-> (turn,h) :: assign_turns (turn+1) t in
@@ -203,7 +210,8 @@ let init_board deck num_players =
     turn_order= assign_turns 0 (List.map (fun h -> h.id) (fst info));
     turn= 0;
     money_pool = 30;
-    last_action = ""
+    last_action = "";
+    mode = mode;
   }
 
 
@@ -386,6 +394,7 @@ let extract_legal b = match b with
       turn = 0;
       money_pool = 0;
       last_action = "";
+      mode = "normal"
     }
 
 let can_act actor_name action_name bd =
@@ -407,34 +416,11 @@ let can_block actor_name action_name bd =
 
 (* ---------------- Block commands begin here ----------------- *)
 
-let get_last_action bd = 
-  bd.last_action
-
-let set_last_action bd s = 
-  {bd with last_action = s}
-
 let make_player_lie bd = 
   let curr_player = 
     current_player bd in
   replace_player (current_player_id bd) {curr_player with telling_truth = false}
     bd
-
-let block_duke bd = 
-  if bd.last_action = "foreign aid" then bd else make_player_lie bd
-
-let block_cap_amb bd = 
-  if bd.last_action = "steal" then bd else make_player_lie bd
-
-let block_contessa bd = 
-  if bd.last_action = "assasinate" then bd else make_player_lie bd
-
-let block bd character= 
-  match character with 
-  |"duke" -> Legal (block_duke bd)
-  |"captain"-> Legal (block_cap_amb bd)
-  |"ambassador" -> Legal (block_cap_amb bd)
-  |"contessa" -> Legal (block_contessa bd) 
-  |_ -> Illegal
 
 let rec alive_players = function
   |[]->[]
@@ -479,3 +465,15 @@ let which_block_steal bd player=
 
 let change_deck bd deck = 
   {bd with current_deck = deck}
+
+let set_dead bd=
+  let rec cycle_players = function
+    |[]->[]
+    |h::t when is_alive bd h.id -> h::cycle_players t
+    |h::t-> begin
+        let dead_player= {h with alive=false} in
+        dead_player::cycle_players t end in
+  {bd with current_players= cycle_players bd.current_players}
+
+let get_mode bd = 
+  bd.mode
