@@ -367,7 +367,7 @@ let rec play_game b =
                  play_game (next_turn (make_player_lie new_card)))
           else
             (* There is no challenge on the block*)
-            (print_endline (blocker^ "blocked the steal."); 
+            (print_endline (blocker^ " blocked the steal."); 
              if (can_block blocker "Steal" b) then 
                play_game (next_turn b)
              else 
@@ -588,8 +588,8 @@ let rec play_game b =
     (* end code to process ai1's command *)
     (*play_game(next_turn b)*)
   else
-    print_string(everyones_info b ^ "\n"); (* is debugging info at the moment, 
-                                              call everyones_info_hidden instead when we are ready*)
+    print_string(everyones_info_hidden b ^ "\n"); 
+
   print_string(turn_info (get_host b) b);
   try match parse (read_line ()) with
     | Quit -> exit 0
