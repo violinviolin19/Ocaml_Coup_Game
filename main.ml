@@ -35,14 +35,17 @@ let rec hidden_or_not player bd  =
 
 (** [choose_card bd] is the facedown card of [player] that they choose in [bd]*)
 let rec choose_card bd player : string=
-  let cards= cards player bd in
-  let card_ids= List.map Deck.get_name (get_cards player bd) in
-  print_string ("Which card would you like to turn over? You have "
-                ^ cards ^ " facedown: ");
-  match String.capitalize_ascii (read_line()) with
-  |s when List.mem s card_ids->s
-  |_->print_string "You do not have a copy of that card facedown, try again"; 
-    choose_card bd player
+  if(get_mode bd <> "hard") then
+    let cards= cards player bd in
+    let card_ids= List.map Deck.get_name (get_cards player bd) in
+    print_string ("Which card would you like to turn over? You have "
+                  ^ cards ^ " facedown: ");
+    match String.capitalize_ascii (read_line()) with
+    |s when List.mem s card_ids->s
+    |_->print_string "You do not have a copy of that card facedown, try again"; 
+      choose_card bd player
+  else
+    Deck.get_name (find_facedown player bd)
 
 (** [choose_two cards can_get_both] is the card or cards that the player chooses
     from [cards] paired with the cards that remain unchosen. If [can_get_both]
@@ -270,7 +273,7 @@ let rec play_game b =
                let new_b= steal (current_player_id b) killed_id turnover in
                if(new_b!= Illegal) then
                  let legal_item = extract_legal new_b in
-                 print_endline (current_player_id b ^ " steals from "^killed_id);
+                 print_endline (current_player_id b ^" steals from "^killed_id);
                  print_string "\n ";
                  let new_card= Board.draw_new legal_item curr_id "Captain" in
                  (play_game(next_turn new_card))
@@ -569,25 +572,52 @@ let rec play_game b =
   try match parse (read_line ()) with
     | Quit -> exit 0
     | Exchange -> begin
-        let challenger = should_any_challenge non_cur_players b "Exchange" "" in
-        if(fst challenger) then
-          let challenger_id= snd challenger in
-          if(can_act curr_id "Exchange" b) then
-            let card_choice= Deck.get_name
-                (Board.find_facedown challenger_id b) in
-            print_endline (
-              challenger_id^
-              " challenged your exchange unsuccessfully, they turned over their"
-              ^ " " ^ card_choice);
-            let new_st= turnover_card challenger_id b card_choice in
-            let new_card= Board.draw_new new_st host_id "Ambassador" in
-            let both= has_both curr_id new_card in
-            let cards= view_four curr_id new_card in
+        if(get_mode b = "hard") then
+          (print_endline "You can not exchange in this game-mode";
+           play_game b)
+        else
+          let challenger =should_any_challenge non_cur_players b "Exchange" ""in
+          if(fst challenger) then
+            let challenger_id= snd challenger in
+            if(can_act curr_id "Exchange" b) then
+              let card_choice= Deck.get_name
+                  (Board.find_facedown challenger_id b) in
+              print_endline (
+                challenger_id^ " challenged "^
+                "your exchange unsuccessfully, they turned over their"
+                ^ " " ^ card_choice);
+              let new_st= turnover_card challenger_id b card_choice in
+              let new_card= Board.draw_new new_st host_id "Ambassador" in
+              let both= has_both curr_id new_card in
+              let cards= view_four curr_id new_card in
+              let choice_info = choose_two (fst cards) both in
+              let discards= snd choice_info in
+              let chosen= fst choice_info in
+              let new_b = exchange curr_id new_card (fst chosen) (snd chosen)
+                  (snd cards) discards in
+              if new_b != Illegal then
+                let legal_item = extract_legal (new_b) in
+                let shuffled_deck = shuffle (get_deck legal_item) in 
+                let new_legal_item = change_deck legal_item shuffled_deck in
+                print_endline (current_player_id b ^
+                               " exchanges with the court deck. \n");
+                print_string "\n> ";
+                play_game (next_turn new_legal_item)
+              else 
+                play_game b
+            else
+              (print_endline (challenger_id^
+                              "successfully challenged your Exchange. \n");
+               let card_choice = choose_card b curr_id in
+               play_game (next_turn (turnover_card curr_id b card_choice)))
+          else
+            let both= has_both curr_id b in
+            let cards= view_four curr_id b in
             let choice_info = choose_two (fst cards) both in
             let discards= snd choice_info in
             let chosen= fst choice_info in
-            let new_b = exchange curr_id new_card (fst chosen) (snd chosen)
-                (snd cards) discards in
+            let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards)
+                discards in
             if new_b != Illegal then
               let legal_item = extract_legal (new_b) in
               let shuffled_deck = shuffle (get_deck legal_item) in 
@@ -598,29 +628,6 @@ let rec play_game b =
               play_game (next_turn new_legal_item)
             else 
               play_game b
-          else
-            (print_endline (challenger_id^
-                            "successfully challenged your Exchange. \n");
-             let card_choice = choose_card b curr_id in
-             play_game (next_turn (turnover_card curr_id b card_choice)))
-        else
-          let both= has_both curr_id b in
-          let cards= view_four curr_id b in
-          let choice_info = choose_two (fst cards) both in
-          let discards= snd choice_info in
-          let chosen= fst choice_info in
-          let new_b = exchange curr_id b (fst chosen) (snd chosen) (snd cards)
-              discards in
-          if new_b != Illegal then
-            let legal_item = extract_legal (new_b) in
-            let shuffled_deck = shuffle (get_deck legal_item) in 
-            let new_legal_item = change_deck legal_item shuffled_deck in
-            print_endline (current_player_id b ^
-                           " exchanges with the court deck. \n");
-            print_string "\n> ";
-            play_game (next_turn new_legal_item)
-          else 
-            play_game b
 
       end
     | Income -> let new_b = income (current_player_id b) b in 

@@ -161,7 +161,9 @@ val can_block : string -> string -> t -> bool
 (** [id_is_ai id b] is true if the player with name [id] in [b] is an ai.*)
 val id_is_ai : string -> t -> bool
 
+(** [get_deck b] is the current deck of [b]*)
 val get_deck: t -> Deck.t
+
 (** [alive_players lst] is the players in [lst] that do not have two faceup
     cards.*)
 val alive_players : player list -> player list
@@ -193,4 +195,5 @@ val set_dead : t -> t
     cards. *)
 val turn_info_hidden : player -> string
 
+(** [get_mode bd] is the mode of [bd].*)
 val get_mode : t -> string

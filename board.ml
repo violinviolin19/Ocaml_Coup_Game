@@ -73,7 +73,8 @@ let rec everyones_info_helper accu player_list bd =
       everyones_info_helper accu t bd
     else
       let card_names= h.id ^ "'s cards are: "^
-                      Deck.get_name (h.card_one)^" and "^Deck.get_name (h.card_two) in
+                      Deck.get_name (h.card_one)^
+                      " and "^Deck.get_name (h.card_two) in
       let card1_info= ". "^ h.id ^ " has a "^Deck.get_name h.card_one^" "
                       ^Deck.get_status h.card_one in
       let card2_info= " and a "^Deck.get_name h.card_two^" "
