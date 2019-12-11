@@ -65,140 +65,140 @@ let rec length lst accu = match lst with
   | h :: t -> length t (accu + 1)
 
 let test_deck = init_deck ()
-let test_board = init_board test_deck 5
-let test_board2 = init_board test_deck 2
+let test_board = init_board test_deck 5 "normal"
+let test_board2 = init_board test_deck 2 "normal"
 let test_board2_next = next_turn test_board2
 let test_board_next = next_turn test_board
-let test_board3 = init_board test_deck 3
+let test_board3 = init_board test_deck 3 "normal"
 let test_board3_next = next_turn test_board3
-let test_board4 = init_board test_deck 4
+let test_board4 = init_board test_deck 4 "normal"
 let test_board_foreign_aid = foreign_aid "host" test_board
 let tests = [
   (* draw tests *)
   "test init deck length" >:: (fun _ -> assert_equal 15 (length test_deck 0));
   "test shuffled deck length" >:: 
-    (fun _ -> assert_equal 15 (length (shuffle test_deck) 0));
+  (fun _ -> assert_equal 15 (length (shuffle test_deck) 0));
   "test draw from deck length" >:: 
-    (fun _ -> assert_equal 14 (length (snd (draw test_deck)) 0));
+  (fun _ -> assert_equal 14 (length (snd (draw test_deck)) 0));
   "test draw failure when empty list is given" >::
-    (fun _ -> assert_raises 
-    (Failure "This won't happen (draw failed)") (fun() -> draw []));
+  (fun _ -> assert_raises 
+      (Failure "This won't happen (draw failed)") (fun() -> draw []));
   "test draw2 from deck length" >:: 
-    (fun _ -> assert_equal 13 (length (snd (draw2 test_deck)) 0));
+  (fun _ -> assert_equal 13 (length (snd (draw2 test_deck)) 0));
   "test draw2 failure when empty list is given" >::
-    (fun _ -> assert_raises 
-    (Failure "This won't happen (draw2 failed)") (fun() -> draw2 []));
+  (fun _ -> assert_raises 
+      (Failure "This won't happen (draw2 failed)") (fun() -> draw2 []));
   "test draw2 from deck length" >:: 
-    (fun _ -> assert_equal 13 (length (snd (draw2 test_deck)) 0));
+  (fun _ -> assert_equal 13 (length (snd (draw2 test_deck)) 0));
   "test get deck names Assasin" >:: 
-    (fun _ -> assert_equal "Assassin" (get_name (Assassin, Deck)));
+  (fun _ -> assert_equal "Assassin" (get_name (Assassin, Deck)));
   "test get deck names Duke" >:: 
-    (fun _ -> assert_equal "Duke" (get_name (Duke, Deck)));
+  (fun _ -> assert_equal "Duke" (get_name (Duke, Deck)));
   "test get deck names Captain" >:: 
-    (fun _ -> assert_equal "Captain" (get_name (Captain, Deck)));
+  (fun _ -> assert_equal "Captain" (get_name (Captain, Deck)));
   "test get deck names Ambassador" >:: 
-    (fun _ -> assert_equal "Ambassador" (get_name (Ambassador, Deck)));
+  (fun _ -> assert_equal "Ambassador" (get_name (Ambassador, Deck)));
   "test get deck names Contessa" >:: 
-    (fun _ -> assert_equal "Contessa" (get_name (Contessa, Deck)));
+  (fun _ -> assert_equal "Contessa" (get_name (Contessa, Deck)));
   "test get status in deck" >:: 
-    (fun _ -> assert_equal "in the deck" (get_status (Duke, Deck)));
+  (fun _ -> assert_equal "in the deck" (get_status (Duke, Deck)));
   "test get status out of play" >:: 
-    (fun _ -> assert_equal "out of play" (get_status (Duke, FaceUp)));
+  (fun _ -> assert_equal "out of play" (get_status (Duke, FaceUp)));
   "test get status in play" >:: 
-    (fun _ -> assert_equal "in play" (get_status (Duke, FaceDown)));
+  (fun _ -> assert_equal "in play" (get_status (Duke, FaceDown)));
   "test get action tax" >:: 
-    (fun _ -> assert_equal "Tax" (get_action (Duke, FaceDown)));
+  (fun _ -> assert_equal "Tax" (get_action (Duke, FaceDown)));
   "test get action assassinate" >:: 
-    (fun _ -> assert_equal "Assassinate" (get_action (Assassin, FaceDown)));
+  (fun _ -> assert_equal "Assassinate" (get_action (Assassin, FaceDown)));
   "test get action none" >:: 
-    (fun _ -> assert_equal "None" (get_action (Contessa, FaceDown)));
+  (fun _ -> assert_equal "None" (get_action (Contessa, FaceDown)));
   "test get action steal" >:: 
-    (fun _ -> assert_equal "Steal" (get_action (Captain, FaceDown)));
+  (fun _ -> assert_equal "Steal" (get_action (Captain, FaceDown)));
   "test get action exchange" >:: 
-    (fun _ -> assert_equal "Exchange" (get_action (Ambassador, FaceDown)));
+  (fun _ -> assert_equal "Exchange" (get_action (Ambassador, FaceDown)));
   "test get blocks foreign_aid" >:: 
-    (fun _ -> assert_equal "Foreign Aid" (get_blocks (Duke, FaceDown)));
+  (fun _ -> assert_equal "Foreign Aid" (get_blocks (Duke, FaceDown)));
   "test get blocks none" >:: 
-    (fun _ -> assert_equal "None" (get_blocks (Assassin, FaceDown)));
+  (fun _ -> assert_equal "None" (get_blocks (Assassin, FaceDown)));
   "test get blocks assassinate" >:: 
-    (fun _ -> assert_equal "Assassinate" (get_blocks (Contessa, FaceDown)));
+  (fun _ -> assert_equal "Assassinate" (get_blocks (Contessa, FaceDown)));
   "test get blocks steal" >:: 
-    (fun _ -> assert_equal "Steal" (get_blocks (Captain, FaceDown)));
+  (fun _ -> assert_equal "Steal" (get_blocks (Captain, FaceDown)));
   "test get blocks steal" >:: 
-    (fun _ -> assert_equal "Steal" (get_blocks (Ambassador, FaceDown)));
+  (fun _ -> assert_equal "Steal" (get_blocks (Ambassador, FaceDown)));
   "test is facedown" >:: 
-    (fun _ -> assert_equal true (is_facedown (Captain, FaceDown)));
+  (fun _ -> assert_equal true (is_facedown (Captain, FaceDown)));
   "test is faceup" >:: 
-    (fun _ -> assert_equal true (is_faceup (Captain, FaceUp)));
+  (fun _ -> assert_equal true (is_faceup (Captain, FaceUp)));
   "test is set status" >:: 
-    (fun _ -> assert_equal 
-    (Captain, FaceUp) (set_status (Captain, FaceDown) FaceUp));
+  (fun _ -> assert_equal 
+      (Captain, FaceUp) (set_status (Captain, FaceDown) FaceUp));
   "test name to card duke" >:: 
-    (fun _ -> assert_equal Duke (name_to_card "Duke"));
+  (fun _ -> assert_equal Duke (name_to_card "Duke"));
   "test name to card assassin" >:: 
-    (fun _ -> assert_equal Assassin (name_to_card "Assassin"));
+  (fun _ -> assert_equal Assassin (name_to_card "Assassin"));
   "test name to card contessa" >:: 
-    (fun _ -> assert_equal Contessa (name_to_card "Contessa"));
+  (fun _ -> assert_equal Contessa (name_to_card "Contessa"));
   "test name to card ambassador" >:: 
-    (fun _ -> assert_equal Ambassador (name_to_card "Ambassador"));
+  (fun _ -> assert_equal Ambassador (name_to_card "Ambassador"));
   "test name to card captain" >:: 
-    (fun _ -> assert_equal Captain (name_to_card "Captain"));
+  (fun _ -> assert_equal Captain (name_to_card "Captain"));
   "test failure using invalid card name" >:: 
-    (fun _ -> assert_raises (InvalidCard "asdf") 
-    (fun () -> name_to_card "asdf"));
+  (fun _ -> assert_raises (InvalidCard "asdf") 
+      (fun () -> name_to_card "asdf"));
   (*board tests *)
   "test is_alive host" >:: 
-    (fun _ -> assert_equal true (is_alive test_board "host"));
+  (fun _ -> assert_equal true (is_alive test_board "host"));
   "test is_alive ai1" >:: 
-    (fun _ -> assert_equal true (is_alive test_board "ai1"));
+  (fun _ -> assert_equal true (is_alive test_board "ai1"));
   "test is_alive ai2" >:: 
-    (fun _ -> assert_equal true (is_alive test_board "ai2"));
+  (fun _ -> assert_equal true (is_alive test_board "ai2"));
   "test is_alive ai3" >:: 
-    (fun _ -> assert_equal true (is_alive test_board "ai3"));
+  (fun _ -> assert_equal true (is_alive test_board "ai3"));
   "test is_alive ai4" >:: 
-    (fun _ -> assert_equal true (is_alive test_board "ai4"));
+  (fun _ -> assert_equal true (is_alive test_board "ai4"));
   "test is_alive Invalid player" >:: 
-    (fun _ -> assert_raises (InvalidPlayer "jjj") 
-    (fun () -> is_alive test_board "jjj"));
+  (fun _ -> assert_raises (InvalidPlayer "jjj") 
+      (fun () -> is_alive test_board "jjj"));
   "test victory is false with an initial board" >::
-    (fun _ -> assert_equal false (fst (victory test_board)));
+  (fun _ -> assert_equal false (fst (victory test_board)));
   "test player is ai true" >::
-    (fun _ -> assert_equal true (id_is_ai "ai1" test_board));
+  (fun _ -> assert_equal true (id_is_ai "ai1" test_board));
   "test player is ai false" >::
-    (fun _ -> assert_equal false (id_is_ai "host" test_board));
+  (fun _ -> assert_equal false (id_is_ai "host" test_board));
   "test player names has 5 correct names" >::
-    (fun _ -> assert_equal ["host";"ai4";"ai3";"ai2";"ai1"] 
-    (player_names test_board));
+  (fun _ -> assert_equal ["host";"ai4";"ai3";"ai2";"ai1"] 
+      (player_names test_board));
   "test player names has 2 correct names" >::
-    (fun _ -> assert_equal ["host";"ai1"] 
-    (player_names test_board2));
+  (fun _ -> assert_equal ["host";"ai1"] 
+      (player_names test_board2));
   "test player names has 3 correct names" >::
-    (fun _ -> assert_equal ["host";"ai2";"ai1"] 
-    (player_names test_board3));
+  (fun _ -> assert_equal ["host";"ai2";"ai1"] 
+      (player_names test_board3));
   "test player names has 4 correct names" >::
-    (fun _ -> assert_equal ["host";"ai3";"ai2";"ai1"] 
-    (player_names test_board4));
+  (fun _ -> assert_equal ["host";"ai3";"ai2";"ai1"] 
+      (player_names test_board4));
   "test current_player of intialized board" >::
-    (fun _ -> assert_equal "host" 
-    (get_player_id (current_player test_board)));
+  (fun _ -> assert_equal "host" 
+      (get_player_id (current_player test_board)));
   "test current_player of next_turn board 2 players" >::
-    (fun _ -> assert_equal "ai1" 
-    (get_player_id (current_player test_board2_next)));
+  (fun _ -> assert_equal "ai1" 
+      (get_player_id (current_player test_board2_next)));
   "test current_player of next_turn board 2 players 2 turns" >::
-    (fun _ -> assert_equal "host" 
-    (get_player_id (current_player (next_turn test_board2_next))));
+  (fun _ -> assert_equal "host" 
+      (get_player_id (current_player (next_turn test_board2_next))));
   "test current_player of next_turn board 5 players" >::
-    (fun _ -> assert_equal "ai4" 
-    (get_player_id (current_player test_board_next)));
+  (fun _ -> assert_equal "ai4" 
+      (get_player_id (current_player test_board_next)));
   "test current_player of next_turn board 5 players 2 turns" >::
-    (fun _ -> assert_equal "ai3" 
-    (get_player_id (current_player (next_turn test_board_next))));
+  (fun _ -> assert_equal "ai3" 
+      (get_player_id (current_player (next_turn test_board_next))));
   "test current_player of next_turn board 3 players" >::
-    (fun _ -> assert_equal "ai2" 
-    (get_player_id (current_player test_board3_next)));
+  (fun _ -> assert_equal "ai2" 
+      (get_player_id (current_player test_board3_next)));
   "test current_player of next_turn board 3 players 2 turns" >::
-    (fun _ -> assert_equal "ai1" 
-    (get_player_id (current_player (next_turn test_board3_next))));
+  (fun _ -> assert_equal "ai1" 
+      (get_player_id (current_player (next_turn test_board3_next))));
 ]
 let suite = "test suite" >::: tests
 let _ = run_test_tt_main suite
