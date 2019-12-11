@@ -17,6 +17,8 @@ let rec choose_num_players () =
   | "5" -> 5
   | _ -> print_string "That's not a valid option.\n"; choose_num_players ()
 
+(** [choose_mode] is the mode the user wants to play, either normal or 
+    hard.*)
 let rec choose_mode () = 
   print_endline "What mode do you want? Choose normal or hard.\n";
   print_string "> ";
@@ -25,6 +27,9 @@ let rec choose_mode () =
   |"hard" -> "hard"
   | _ -> print_string "That's not a valid option.\n"; choose_mode ()
 
+(** [hidden_or_not player bd] is the hidden version of information if the game 
+    is on hard mode and is the normal information if the game is on normal mode. 
+*)
 let rec hidden_or_not player bd  = 
   if get_mode bd = "hard" then turn_info_hidden player else turn_info player bd
 
@@ -366,7 +371,8 @@ let rec play_game b =
              let new_card= Board.draw_new legal_item curr_id "Duke" in
              play_game (next_turn new_card)
            else
-             (print_endline "That's not a valid command to take tax try again\n";
+             (print_endline 
+                "That's not a valid command to take tax try again\n";
               print_string "\n> ";
               play_game b;))
         else
@@ -756,7 +762,8 @@ let rec play_game b =
                 (steal (current_player_id b) killed_id new_card) in
             play_game(next_turn (turnover_card challenger_id new_b card_choice))
           else
-            (print_endline (challenger_id^" successfully challenged your Steal");
+            (print_endline (challenger_id^
+                            " successfully challenged your Steal");
              let card_choice = choose_card b curr_id in
              play_game (next_turn (turnover_card curr_id b card_choice)))
 
